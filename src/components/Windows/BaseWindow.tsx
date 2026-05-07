@@ -21,17 +21,17 @@ export default function BaseWindow({ id, title, icon, width = '440px', children,
   const offsetRef = useRef({ x: 0, y: 0 });
   const windowRef = useRef<HTMLDivElement>(null);
 
-  if (!isOpen) return null;
-
   const handleMouseDown = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest('.win-btn')) return;
     
     setIsDragging(true);
-    const rect = windowRef.current!.getBoundingClientRect();
-    offsetRef.current = {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
-    };
+    if (windowRef.current) {
+      const rect = windowRef.current.getBoundingClientRect();
+      offsetRef.current = {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      };
+    }
   };
 
   useEffect(() => {
@@ -61,6 +61,8 @@ export default function BaseWindow({ id, title, icon, width = '440px', children,
       document.removeEventListener('mouseup', handleMouseUp);
     };
   }, [isDragging]);
+
+  if (!isOpen) return null;
 
   const style: React.CSSProperties = {
     display: 'flex',
