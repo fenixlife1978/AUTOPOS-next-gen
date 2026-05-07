@@ -7,12 +7,14 @@ import { fechaStr, horaStr, fmt, fechaISO } from '@/lib/posLogic';
 
 export default function StatusBar() {
   const { state } = usePOS();
-  const [time, setTime] = useState({ date: fechaStr(), time: horaStr() });
+  const [mounted, setMounted] = useState(false);
+  const [time, setTime] = useState({ date: '', time: '' });
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTime({ date: fechaStr(), time: horaStr() });
-    }, 10000);
+    setMounted(true);
+    const updateTime = () => setTime({ date: fechaStr(), time: horaStr() });
+    updateTime();
+    const timer = setInterval(updateTime, 10000);
     return () => clearInterval(timer);
   }, []);
 
@@ -24,7 +26,7 @@ export default function StatusBar() {
     <div className="status-bar">
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         <span><span className="status-dot"></span>Conectado</span>
-        <span>{time.date} {time.time}</span>
+        <span>{mounted ? `${time.date} ${time.time}` : 'Cargando...'}</span>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         <span>Ventas hoy: {ventasHoy.length}</span>
