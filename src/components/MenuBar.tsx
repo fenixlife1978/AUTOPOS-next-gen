@@ -46,34 +46,6 @@ export default function MenuBar() {
           <div className="menu-dropdown-item" onClick={exportData}><i className="fas fa-download"></i>Exportar datos</div>
         </div>
       </div>
-
-      {/* Ventas */}
-      <div className={`menu-item ${activeMenu === 'ventas' ? 'active' : ''}`} onClick={() => handleMenuClick('ventas')}>
-        Ventas
-        <div className="menu-dropdown">
-          <div className="menu-dropdown-item" onClick={() => { openWindow('cobrar'); closeMenu(); }}><i className="fas fa-cash-register"></i>Cobrar<span className="menu-shortcut">F4</span></div>
-          <div className="menu-dropdown-item" onClick={() => { openWindow('historial'); closeMenu(); }}><i className="fas fa-receipt"></i>Ver ventas</div>
-          <div className="menu-dropdown-item" onClick={() => { openWindow('reportes'); closeMenu(); }}><i className="fas fa-chart-bar"></i>Reportes<span className="menu-shortcut">F5</span></div>
-        </div>
-      </div>
-
-      {/* Inventario */}
-      <div className={`menu-item ${activeMenu === 'inventario' ? 'active' : ''}`} onClick={() => handleMenuClick('inventario')}>
-        Inventario
-        <div className="menu-dropdown">
-          <div className="menu-dropdown-item" onClick={() => { openWindow('inventario'); closeMenu(); }}><i className="fas fa-boxes-stacked"></i>Productos<span className="menu-shortcut">F6</span></div>
-          <div className="menu-dropdown-item" onClick={() => { openWindow('agregarProducto'); closeMenu(); }}><i className="fas fa-plus-circle"></i>Agregar producto</div>
-        </div>
-      </div>
-
-      {/* Clientes */}
-      <div className={`menu-item ${activeMenu === 'clientes' ? 'active' : ''}`} onClick={() => handleMenuClick('clientes')}>
-        Clientes
-        <div className="menu-dropdown">
-          <div className="menu-dropdown-item" onClick={() => { openWindow('clientes'); closeMenu(); }}><i className="fas fa-users"></i>Ver clientes<span className="menu-shortcut">F7</span></div>
-          <div className="menu-dropdown-item" onClick={() => { openWindow('agregarCliente'); closeMenu(); }}><i className="fas fa-user-plus"></i>Agregar cliente</div>
-        </div>
-      </div>
     </div>
   );
 }
