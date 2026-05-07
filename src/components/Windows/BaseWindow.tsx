@@ -2,7 +2,6 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import { usePOS } from '../POSContext';
 
 interface Props {
   id: string;
@@ -21,20 +20,9 @@ export default function BaseWindow({ id, title, icon, width = '440px', children,
   const offsetRef = useRef({ x: 0, y: 0 });
   const windowRef = useRef<HTMLDivElement>(null);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest('.win-btn')) return;
-    
-    setIsDragging(true);
-    if (windowRef.current) {
-      const rect = windowRef.current.getBoundingClientRect();
-      offsetRef.current = {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
-      };
-    }
-  };
-
   useEffect(() => {
+    if (!isOpen) return;
+
     const handleMouseMove = (e: MouseEvent) => {
       if (!isDragging) return;
       
@@ -60,8 +48,22 @@ export default function BaseWindow({ id, title, icon, width = '440px', children,
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDragging]);
+  }, [isDragging, isOpen]);
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest('.win-btn')) return;
+    
+    setIsDragging(true);
+    if (windowRef.current) {
+      const rect = windowRef.current.getBoundingClientRect();
+      offsetRef.current = {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      };
+    }
+  };
+
+  // Conditional return must be after all hook declarations
   if (!isOpen) return null;
 
   const style: React.CSSProperties = {
@@ -77,7 +79,9 @@ export default function BaseWindow({ id, title, icon, width = '440px', children,
       <div className="win-titlebar" onMouseDown={handleMouseDown}>
         <i className={`fas ${icon}`}></i>
         <span>{title}</span>
-        <button className="win-btn close" onClick={onClose}><i className="fas fa-xmark"></i></button>
+        <button className="win-btn close" onClick={onClose} aria-label="Cerrar">
+          <i className="fas fa-xmark"></i>
+        </button>
       </div>
       <div className="win-body">
         {children}
