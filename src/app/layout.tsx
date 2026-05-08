@@ -1,17 +1,23 @@
 
+"use client";
+
 import type { Metadata } from 'next';
 import './globals.css';
-
-export const metadata: Metadata = {
-  title: 'AutoPOS - Sistema de Ventas Automotriz',
-  description: 'Sistema POS profesional para talleres y refaccionarias automotrices.',
-};
+import { useEffect, useState } from 'react';
+import { initializeFirebase } from '@/firebase';
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const [initialized, setInitialized] = useState(false);
+
+  useEffect(() => {
+    initializeFirebase();
+    setInitialized(true);
+  }, []);
+
   return (
     <html lang="es">
       <head>
@@ -23,7 +29,7 @@ export default function RootLayout({
       <body className="font-body antialiased">
         <div className="bg-glow bg-glow-1"></div>
         <div className="bg-glow bg-glow-2"></div>
-        {children}
+        {initialized ? children : <div className="flex h-screen items-center justify-center bg-[#0c0c14] text-white">Iniciando AutoPOS...</div>}
       </body>
     </html>
   );

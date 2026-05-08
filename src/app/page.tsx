@@ -24,6 +24,8 @@ import AddSupplierWindow from '@/components/Windows/AddSupplierWindow';
 import InvoicesWindow from '@/components/Windows/InvoicesWindow';
 import AddInvoiceWindow from '@/components/Windows/AddInvoiceWindow';
 import AccountsPayableWindow from '@/components/Windows/AccountsPayableWindow';
+import CollectionsWindow from '@/components/Windows/CollectionsWindow';
+import AccountingWindow from '@/components/Windows/AccountingWindow';
 
 function MainLayout() {
   const { clearCart, openWindow, closeWindow, activeWindow, setIsCartMobileOpen, mobileTab, setMobileTab } = usePOS();
@@ -94,6 +96,8 @@ function MainLayout() {
       <InvoicesWindow />
       <AddInvoiceWindow />
       <AccountsPayableWindow />
+      <CollectionsWindow />
+      <AccountingWindow />
     </>
   );
 }
