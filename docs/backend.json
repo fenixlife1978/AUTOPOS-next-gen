@@ -1,0 +1,71 @@
+
+{
+  "entities": {
+    "Proveedor": {
+      "title": "Proveedor",
+      "description": "Información de proveedores de la refaccionaria",
+      "type": "object",
+      "properties": {
+        "nombre": { "type": "string" },
+        "rif": { "type": "string" },
+        "contacto": { "type": "string" },
+        "telefono": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "direccion": { "type": "string" },
+        "categoria": { "type": "string", "enum": ["lubricante", "repuesto", "general"] },
+        "notas": { "type": "string" }
+      },
+      "required": ["nombre"]
+    },
+    "FacturaCompra": {
+      "title": "Factura de Compra",
+      "description": "Registro de compras a proveedores (Fiscal o Nota)",
+      "type": "object",
+      "properties": {
+        "proveedorId": { "type": "number" },
+        "numeroFactura": { "type": "string" },
+        "fechaEmision": { "type": "string", "format": "date" },
+        "fechaVencimiento": { "type": "string", "format": "date" },
+        "montoDolares": { "type": "number" },
+        "montoBolivares": { "type": "number" },
+        "tasaBCV": { "type": "number" },
+        "tipoFactura": { "type": "string", "enum": ["FISCAL_SENIAT", "NOTA_ENTREGA"] },
+        "estadoPago": { "type": "string", "enum": ["pendiente", "parcial", "pagada", "vencida"] },
+        "totalPagado": { "type": "number" },
+        "saldoPendiente": { "type": "number" },
+        "imagenUrl": { "type": "string" }
+      },
+      "required": ["proveedorId", "numeroFactura", "montoBolivares"]
+    },
+    "Abono": {
+      "title": "Abono a Factura",
+      "description": "Pago parcial o total a una factura de proveedor",
+      "type": "object",
+      "properties": {
+        "facturaId": { "type": "number" },
+        "montoBolivares": { "type": "number" },
+        "fechaAbono": { "type": "string", "format": "date-time" },
+        "metodoPago": { "type": "string" },
+        "referencia": { "type": "string" }
+      },
+      "required": ["facturaId", "montoBolivares"]
+    }
+  },
+  "auth": {
+    "providers": ["google.com", "password"]
+  },
+  "firestore": {
+    "/proveedores/{proveedorId}": {
+      "schema": "#/backend/entities/Proveedor",
+      "description": "Colección de proveedores"
+    },
+    "/facturas_compra/{facturaId}": {
+      "schema": "#/backend/entities/FacturaCompra",
+      "description": "Registro de compras"
+    },
+    "/abonos/{abonoId}": {
+      "schema": "#/backend/entities/Abono",
+      "description": "Registro de pagos a proveedores"
+    }
+  }
+}

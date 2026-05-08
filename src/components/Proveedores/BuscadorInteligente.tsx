@@ -87,7 +87,7 @@ export function BuscadorInteligente({ onSelectProveedor }: { onSelectProveedor: 
           {resultados.map((p) => (
             <div
               key={p.id}
-              onClick={() => onSelectProveedor(p)}
+              onClick={() => onSelectProveedor(p as any)}
               style={{ padding: '10px', borderBottom: '1px solid var(--border)', cursor: 'pointer' }}
               className="hover:bg-[var(--bg4)]"
             >
