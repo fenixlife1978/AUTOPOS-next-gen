@@ -1,7 +1,7 @@
 
 /**
  * @fileOverview Catálogo inteligente de productos automotrices cargado en RAM.
- * Contiene una base de datos exhaustiva de marcas y productos comunes en Venezuela (+15,000 registros).
+ * Base de datos exhaustiva para el mercado venezolano (+15,000 registros).
  */
 
 export interface CatalogItem {
@@ -21,82 +21,97 @@ const MARCAS_REPUESTOS = [
   'KYB', 'Monroe', 'Wagner', 'Bendix', 'Moog', 'Gates', 'Dayco', 'Mopar', 'Toyota Genuine',
   'Ford Motorcraft', 'GM Genuine', 'Honda OEM', 'Mazda Genuine', 'Nissan Genuine', 'Federal Mogul',
   'Mahle', 'Perfect Circle', 'Hastings', 'Fel-Pro', 'National', 'SKF', 'Timken', 'NSK', 'Koyo',
-  'Aisin', 'Valeo', 'Luk', 'Sachs', 'Brembo', 'Hitachi', 'Tokico', 'CTR', '555', 'GMB'
+  'Aisin', 'Valeo', 'Luk', 'Sachs', 'Brembo', 'Hitachi', 'Tokico', 'CTR', '555', 'GMB', 'TTC', 'Daewoo'
 ];
 
 const MARCAS_ELECTRICAS = [
   'Delphi', 'Magneti Marelli', 'Standard', 'Hella', 'Denso', 'Bosch', 'Valeo', 'Mitsubishi Electric',
-  'Lucas', 'Prestolite', 'VDO', 'Continental'
-];
-
-const TIPOS_LUBRICANTE = [
-  'Aceite Mineral 15W-40', 'Aceite Mineral 20W-50', 'Aceite Semisintético 10W-30',
-  'Aceite Semisintético 15W-40', 'Aceite Sintético 5W-30', 'Aceite Sintético 0W-20',
-  'Aceite Sintético 5W-40', 'Aceite Sintético 10W-40', 'Aceite para Moto 4T 20W-50',
-  'Aceite para Moto 2T', 'Aceite para Transmisión Automática ATF DX-III',
-  'Aceite para Transmisión Automática ATF+4', 'Aceite para Transmisión CVT',
-  'Aceite de Transmisión 80W-90', 'Valvulina 85W-140', 'Líquido de Frenos DOT 3',
-  'Líquido de Frenos DOT 4', 'Refrigerante Rojo 50/50', 'Refrigerante Verde 50/50',
-  'Limpia Parabrisas', 'Grasa de Chasis', 'Grasa de Rodamiento', 'Aditivo de Inyectores',
-  'Tratamiento de Motor', 'Limpia Motores Externo'
-];
-
-const TIPOS_REPUESTO = [
-  'Filtro de Aceite', 'Filtro de Aire', 'Filtro de Gasolina', 'Filtro de Cabina',
-  'Bujía de Iridium', 'Bujía de Cobre', 'Bujía de Platino', 'Pastillas de Freno Delanteras',
-  'Pastillas de Freno Traseras', 'Bandas de Freno Traseras', 'Disco de Freno', 'Tambor de Freno',
-  'Correa de Tiempo', 'Correa de Accesorios (Única)', 'Correa de Alternador', 'Correa de Aire Acondicionado',
-  'Kit de Embrague (Disco y Prensa)', 'Collarín de Embrague', 'Amortiguador Delantero Izquierdo',
-  'Amortiguador Delantero Derecho', 'Amortiguador Trasero', 'Bomba de Agua', 'Bomba de Gasolina',
-  'Terminal de Dirección', 'Muñón Inferior', 'Muñón Superior', 'Rodamiento de Rueda Delantero',
-  'Rodamiento de Rueda Trasero', 'Estopera de Cigüeñal', 'Empacadura de Cámara', 'Goma de Válvula',
-  'Termostato', 'Radiador', 'Alternador', 'Motor de Arranque', 'Batería 800 AMP', 'Batería 1100 AMP',
-  'Bomba de Aceite', 'Cadena de Tiempo', 'Kit de Distribución', 'Válvula PCV', 'Tapa de Radiador',
-  'Manguera de Radiador Superior', 'Manguera de Radiador Inferior', 'Base de Motor', 'Base de Caja'
-];
-
-const TIPOS_ELECTRICOS = [
-  'Sensor de Oxígeno', 'Sensor MAP', 'Sensor CKP (Cigüeñal)', 'Sensor CMP (Leva)', 'Sensor TPS',
-  'Sensor de Temperatura', 'Bobina de Encendido', 'Cables de Bujía', 'Módulo de Encendido',
-  'Fusible 10A', 'Fusible 15A', 'Fusible 20A', 'Relé 4 Pines', 'Relé 5 Pines', 'Bombillo H4',
-  'Bombillo H7', 'Bombillo 1157 (Doble Contacto)', 'Bombillo LED para Faro', 'Conector de Inyector',
-  'Pila de Gasolina', 'Flotante de Gasolina', 'Sensor ABS', 'Switch de Freno'
-];
-
-const TIPOS_GENERAL = [
-  'Tirras (Zip Ties) Pack 100u', 'Grapas para Parachoques', 'Tornillo Milimétrico 10mm',
-  'Abrazadera de Acero', 'Cinta Aislante Cobra', 'Pega Tanque', 'Silicona Gris RTV',
-  'Limpia Carburador (Carbu-Clean)', 'Goma de Limpiaparabrisas', 'Alfombras Universales'
+  'Lucas', 'Prestolite', 'VDO', 'Continental', 'Yazaki', 'Trico'
 ];
 
 const MODELOS_VEHICULOS = [
   'Toyota Corolla', 'Toyota Hilux', 'Toyota Fortuner', 'Toyota Yaris', 'Toyota 4Runner',
-  'Ford Fiesta', 'Ford Explorer', 'Ford EcoSport', 'Ford F-150', 'Ford Cargo',
-  'Chevrolet Aveo', 'Chevrolet Optra', 'Chevrolet Silverado', 'Chevrolet Cruze', 'Chevrolet Spark',
+  'Ford Fiesta', 'Ford Explorer', 'Ford EcoSport', 'Ford F-150', 'Ford Cargo', 'Ford Ka',
+  'Chevrolet Aveo', 'Chevrolet Optra', 'Chevrolet Silverado', 'Chevrolet Cruze', 'Chevrolet Spark', 'Chevrolet Orlando',
   'Hyundai Elantra', 'Hyundai Accent', 'Hyundai Tucson', 'Hyundai Getz',
   'Honda Civic', 'Honda CR-V', 'Jeep Grand Cherokee', 'Jeep Cherokee (KK)', 'Jeep Wrangler',
-  'Mitsubishi Lancer', 'Mitsubishi Montero', 'Mazda 3', 'Mazda BT-50', 'Kia Rio', 'Kia Sportage'
+  'Mitsubishi Lancer', 'Mitsubishi Montero', 'Mazda 3', 'Mazda BT-50', 'Kia Rio', 'Kia Sportage',
+  'Fiat Uno', 'Fiat Palio', 'Fiat Siena', 'Renault Logan', 'Renault Symbol'
+];
+
+const TIPOS_MOTOR = [
+  'Kit de embrague (disco, presión, release)', 'Bomba de agua', 'Bomba de aceite', 'Bomba de gasolina eléctrica',
+  'Bomba de gasolina mecánica', 'Correa de distribución', 'Kit de tiempo (tensor y poleas)', 'Correa de accesorios',
+  'Tensor de correa', 'Polea del cigüeñal', 'Empaque de tapa de válvulas', 'Junta de culata (empaque)',
+  'Anillos de pistón', 'Pistón con biela', 'Válvulas de admisión', 'Válvulas de escape', 'Taqués hidráulicos',
+  'Balancines', 'Árbol de levas', 'Cigüeñal', 'Volante de motor', 'Inyectores de gasolina', 'Múltiple de admisión',
+  'Carter de aceite', 'Varilla de nivel de aceite', 'Soporte de motor', 'Filtro de aire', 'Filtro de aceite',
+  'Filtro de gasolina', 'Kit de empacaduras completo'
+];
+
+const TIPOS_TRANSMISION = [
+  'Cilindro maestro de embrague', 'Cilindro esclavo de embrague', 'Bomba de embrague', 'Caja de cambio manual',
+  'Eje de transmisión', 'Junta homocinética interna', 'Junta homocinética externa', 'Fuelle de junta homocinética',
+  'Cruceta de cardán', 'Retén de eje', 'Soporte de caja', 'Selector de cambios', 'Diferencial (corona y piñón)'
+];
+
+const TIPOS_FRENOS = [
+  'Pastillas de freno delanteras', 'Pastillas de freno traseras', 'Bandas de freno traseras', 'Disco de freno',
+  'Tambor de freno', 'Cilindro de rueda', 'Caliper de freno', 'Bomba de freno maestra', 'Servofreno (Hidrovac)',
+  'Manguera de freno', 'Tubería de freno', 'Sensor de ABS', 'Regulador de freno'
+];
+
+const TIPOS_SUSPENSION = [
+  'Amortiguador delantero', 'Amortiguador trasero', 'Espirales (resortes)', 'Buje de meseta', 'Brazos de control',
+  'Rotula de suspensión', 'Terminal de dirección', 'Muñón de dirección', 'Cremallera de dirección',
+  'Bomba de dirección hidráulica', 'Barra estabilizadora', 'Link de barra estabilizadora', 'Fuelle de cremallera'
+];
+
+const TIPOS_ELECTRICOS = [
+  'Alternador completo', 'Motor de arranque', 'Batería 12V 45Ah', 'Batería 12V 60Ah', 'Batería 12V 75Ah',
+  'Regulador de voltaje', 'Diodos de alternador', 'Bendix de arranque', 'Solenoide de arranque',
+  'Interruptor de retroceso', 'Interruptor de freno', 'Bornes de batería', 'Fusible 10A/15A/20A', 'Relé 4/5 pines',
+  'Sensor CKP (Cigüeñal)', 'Sensor CMP (Leva)', 'Sensor TPS', 'Sensor MAP', 'Sensor MAF', 'Sensor de Oxígeno',
+  'Bobina de encendido', 'Cables de bujía', 'Bujía de Iridium', 'Bujía de Platino', 'Bujía Estándar',
+  'Foco H4', 'Foco H7', 'Foco LED para Faro', 'Bocina (Claxon)'
+];
+
+const TIPOS_LUBRICANTE = [
+  'Aceite Mineral 15W-40', 'Aceite Mineral 20W-50', 'Aceite Semisintético 10W-30', 'Aceite Semisintético 15W-40',
+  'Aceite Sintético 5W-30', 'Aceite Sintético 0W-20', 'Aceite para Moto 4T', 'Aceite ATF DX-III', 'Aceite ATF +4',
+  'Aceite para Transmisión CVT', 'Valvulina 80W-90', 'Valvulina 85-140', 'Líquido de Frenos DOT 3', 'Líquido de Frenos DOT 4',
+  'Refrigerante Rojo 50/50', 'Refrigerante Verde 50/50', 'Aditivo de Inyectores', 'Limpiador de Carburador',
+  'Limpiador de Frenos', 'Grasa de Chasis', 'Grasa de Rodamiento'
+];
+
+const TIPOS_HERRAMIENTAS = [
+  'Juego de llaves (dados)', 'Llave de bujías', 'Comprobador de batería', 'Cables puente', 'Gato hidráulico',
+  'Soportes (caballetes)', 'Linterna LED recargable', 'Copa para filtro de aceite', 'Extractor de tornillos',
+  'Tirras (Zip Ties) Pack 100u', 'Grapas para Parachoques', 'Cinta Aislante Cobra', 'Pega Tanque', 'Silicona Gris RTV'
 ];
 
 function generateCatalog(): CatalogItem[] {
   const catalog: CatalogItem[] = [];
   
-  // 1. LUBRICANTES (~1,000 variaciones)
+  // 1. LUBRICANTES (~1,500 variaciones)
   MARCAS_LUBRICANTES.forEach(marca => {
     TIPOS_LUBRICANTE.forEach(tipo => {
       catalog.push({
         nombre: `${tipo} ${marca}`,
         marca: marca,
         categoria: 'lubricante',
-        unidad: tipo.includes('Aceite') || tipo.includes('Líquido') ? 'litro' : 'pieza'
+        unidad: tipo.includes('Aceite') || tipo.includes('Líquido') || tipo.includes('Valvulina') ? 'litro' : 'pieza'
       });
     });
   });
 
-  // 2. REPUESTOS MECÁNICOS (~9,000 variaciones: Partes x Marcas x Modelos)
-  const repuestosBase = TIPOS_REPUESTO.slice(0, 20); // Limitar combinaciones para no exceder RAM excesivamente pero ser amplio
-  MARCAS_REPUESTOS.slice(0, 15).forEach(marca => {
-    repuestosBase.forEach(tipo => {
+  // 2. REPUESTOS (Motor, Frenos, Transmisión, Suspensión) (~10,000+ variaciones)
+  const repuestosBase = [...TIPOS_MOTOR, ...TIPOS_FRENOS, ...TIPOS_TRANSMISION, ...TIPOS_SUSPENSION];
+  
+  repuestosBase.forEach(tipo => {
+    // Seleccionamos un subconjunto de marcas para cada tipo para no explotar la RAM
+    const marcasDisponibles = MARCAS_REPUESTOS.slice(0, 20);
+    marcasDisponibles.forEach(marca => {
       MODELOS_VEHICULOS.forEach(modelo => {
         catalog.push({
           nombre: `${tipo} ${marca} para ${modelo}`,
@@ -108,9 +123,9 @@ function generateCatalog(): CatalogItem[] {
     });
   });
 
-  // 3. PARTES ELÉCTRICAS Y SENSORES (~3,000 variaciones)
-  MARCAS_ELECTRICAS.forEach(marca => {
-    TIPOS_ELECTRICOS.forEach(tipo => {
+  // 3. ELECTRICIDAD Y SENSORES (~3,000 variaciones)
+  TIPOS_ELECTRICOS.forEach(tipo => {
+    MARCAS_ELECTRICAS.forEach(marca => {
       MODELOS_VEHICULOS.slice(0, 15).forEach(modelo => {
         catalog.push({
           nombre: `${tipo} ${marca} (${modelo})`,
@@ -122,8 +137,8 @@ function generateCatalog(): CatalogItem[] {
     });
   });
 
-  // 4. FERRETERÍA Y GENERAL
-  TIPOS_GENERAL.forEach(item => {
+  // 4. FERRETERÍA Y HERRAMIENTAS
+  TIPOS_HERRAMIENTAS.forEach(item => {
     catalog.push({
       nombre: item,
       marca: 'Genérico',
@@ -136,11 +151,9 @@ function generateCatalog(): CatalogItem[] {
   const servicios = [
     'Cambio de Aceite y Filtro', 'Entonación Mayor (6 Cil)', 'Entonación Mayor (4 Cil)',
     'Limpieza de Inyectores por Ultrasonido', 'Revisión de Frenos y Ajuste', 'Escaneo Computarizado OBDII',
-    'Cambio de Correa de Tiempo', 'Servicio de Aire Acondicionado (Carga Gas)',
-    'Balanceo y Rotación de Cauchos', 'Lavado de Motor', 'Cambio de Pastillas de Freno',
-    'Revisión de Tren Delantero', 'Cambio de Amortiguadores', 'Instalación de Kit de Embrague',
-    'Lavado Sencillo', 'Lavado y Aspirado', 'Pulitura de Faros', 'Limpieza de Tapicería',
-    'Mantenimiento de Alternador', 'Mantenimiento de Motor de Arranque', 'Diagnóstico Eléctrico'
+    'Cambio de Correa de Tiempo', 'Servicio de Aire Acondicionado', 'Balanceo y Rotación de Cauchos',
+    'Lavado de Motor', 'Cambio de Pastillas de Freno', 'Revisión de Tren Delantero', 'Lavado Sencillo',
+    'Mantenimiento de Alternador', 'Instalación de Kit de Embrague', 'Diagnóstico Eléctrico'
   ];
   
   servicios.forEach(s => {
@@ -160,7 +173,7 @@ let RAM_CATALOG: CatalogItem[] | null = null;
 export function getAutomotiveCatalog(): CatalogItem[] {
   if (!RAM_CATALOG) {
     RAM_CATALOG = generateCatalog();
-    console.log(`Catálogo inteligente cargado en RAM con ${RAM_CATALOG.length} registros.`);
+    console.log(`Catálogo masivo cargado: ${RAM_CATALOG.length} registros.`);
   }
   return RAM_CATALOG;
 }
