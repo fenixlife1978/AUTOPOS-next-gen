@@ -1,7 +1,7 @@
 
 import { AppState, Product, Client, Supplier, CuentaContable, TasaCambio } from './types';
 
-export const STORAGE_KEY = 'autopos_v4_accounting_v2';
+export const STORAGE_KEY = 'autopos_v5_pro_accounting';
 
 export const PRODUCTOS_INICIALES: Product[] = [
   {id:1,nombre:'Aceite Sintético 5W-30 1L',categoria:'lubricante',codigo:'LUB-001',precio:285,costo:180,porcentajeGanancia:0,porcentajeIVA:16,stock:24,unidad:'litro',desc:'Aceite motor sintético de alta performance',icon:'fa-bottle-droplet'},
@@ -17,19 +17,11 @@ export const PROVEEDORES_INICIALES: Supplier[] = [
   {id:1,nombre:'Distribuidora Nacional de Aceites SA',rif:'J-12345678-9',contacto:'Juan Pérez',telefono:'555-800-1000',email:'ventas@dna.com',direccion:'Zona Industrial #200',categoria:'lubricante',notas:'Entrega los martes'}
 ];
 
+// Start with a clean but structured minimal chart of accounts
 export const CUENTAS_INICIALES: CuentaContable[] = [
-  { id: '1.1.1.01', codigo: '1.1.1.01', nombre: 'Caja Principal', tipo: 'ACTIVO', nivel: 3, editable: false },
-  { id: '1.1.1.02', codigo: '1.1.1.02', nombre: 'Caja Chica', tipo: 'ACTIVO', nivel: 3, editable: false },
-  { id: '1.1.2.01', codigo: '1.1.2.01', nombre: 'Banco Mercantil', tipo: 'ACTIVO', nivel: 3, editable: true },
-  { id: '1.1.2.02', codigo: '1.1.2.02', nombre: 'Banco Banesco', tipo: 'ACTIVO', nivel: 3, editable: true },
-  { id: '1.1.3.01', codigo: '1.1.3.01', nombre: 'Cuentas por Cobrar Clientes', tipo: 'ACTIVO', nivel: 3, editable: false },
-  { id: '1.7.2.01', codigo: '1.7.2.01', nombre: 'Crédito Fiscal IVA', tipo: 'ACTIVO', nivel: 3, editable: false },
-  { id: '2.1.1.01', codigo: '2.1.1.01', nombre: 'Cuentas por Pagar Proveedores', tipo: 'PASIVO', nivel: 3, editable: false },
-  { id: '2.1.2.01', codigo: '2.1.2.01', nombre: 'Débito Fiscal IVA', tipo: 'PASIVO', nivel: 3, editable: false },
-  { id: '4.1.1.01', codigo: '4.1.1.01', nombre: 'Ingresos por Ventas', tipo: 'INGRESO', nivel: 3, editable: false },
-  { id: '5.1.1.01', codigo: '5.1.1.01', nombre: 'Costo de Ventas', tipo: 'GASTO', nivel: 3, editable: false },
-  { id: '7.3.1.01', codigo: '7.3.1.01', nombre: 'Ganancia Cambiaria', tipo: 'INGRESO', nivel: 3, editable: false },
-  { id: '8.3.1.01', codigo: '8.3.1.01', nombre: 'Pérdida Cambiaria', tipo: 'GASTO', nivel: 3, editable: false }
+  { id: 'root-1', codigo: '1.1.01.01', nombre: 'Caja Principal', tipo: 'ACTIVO CORRIENTE', nivel: 4, saldoInicial: 0, monedaSaldoInicial: 'VES', editable: false },
+  { id: 'root-2', codigo: '2.1.02.01', nombre: 'Débito Fiscal IVA', tipo: 'PASIVO CORRIENTE', nivel: 4, saldoInicial: 0, monedaSaldoInicial: 'VES', editable: false },
+  { id: 'root-3', codigo: '4.1.01.01', nombre: 'Ingresos por Ventas', tipo: 'INGRESOS OPERACIONALES', nivel: 4, saldoInicial: 0, monedaSaldoInicial: 'VES', editable: false }
 ];
 
 export const TASAS_INICIALES: TasaCambio[] = [

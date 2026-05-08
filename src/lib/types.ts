@@ -4,14 +4,30 @@ export type Method = 'efectivo_bs' | 'pago_movil' | 'biopago' | 'transferencia' 
 export type AccountStatus = 'PENDIENTE' | 'PARCIAL' | 'COBRADO' | 'VENCIDO' | 'CASTIGADO';
 export type FacturaTipo = 'FISCAL_SENIAT' | 'NOTA_ENTREGA';
 export type Moneda = 'VES' | 'USD' | 'EUR';
-export type AccountType = 'ACTIVO' | 'PASIVO' | 'PATRIMONIO' | 'INGRESO' | 'GASTO';
+
+export type AccountType = 
+  | 'ACTIVO CORRIENTE' 
+  | 'ACTIVO NO CORRIENTE' 
+  | 'PASIVO CORRIENTE' 
+  | 'PASIVO NO CORRIENTE' 
+  | 'PATRIMONIO' 
+  | 'INGRESOS OPERACIONALES' 
+  | 'INGRESOS NO OPERACIONALES' 
+  | 'COSTOS DE VENTAS' 
+  | 'GASTOS ADMINISTRATIVOS' 
+  | 'GASTOS DE VENTAS' 
+  | 'GASTOS FINANCIEROS' 
+  | 'OTROS INGRESOS' 
+  | 'OTROS GASTOS' 
+  | 'CUENTAS DE ORDEN' 
+  | 'RESERVAS';
 
 export interface TasaCambio {
   id?: string;
   monedaOrigen: Moneda;
   monedaDestino: Moneda;
   tasa: number;
-  fecha: any; // Timestamp
+  fecha: any;
   fuente: 'BCV' | 'PARALELO' | 'MANUAL';
   created_at: any;
 }
@@ -124,14 +140,17 @@ export interface CuentaContable {
   tipo: AccountType;
   nivel: number;
   padreId?: string;
+  saldoInicial: number;
+  monedaSaldoInicial: Moneda;
   editable: boolean;
+  mesCerrado?: string; // Formato YYYY-MM
 }
 
 export interface AsientoContable {
   id: string;
   fecha: any;
   descripcion: string;
-  tipo: 'VENTA' | 'COMPRA' | 'COBRO' | 'ABONO' | 'AJUSTE' | 'OTRO';
+  tipo: 'VENTA' | 'COMPRA' | 'COBRO' | 'ABONO' | 'AJUSTE' | 'CIERRE' | 'OTRO';
   referencia: string;
   modulo: 'VENTAS' | 'COMPRAS' | 'CLIENTES' | 'PROVEEDORES' | 'CONTABILIDAD';
   lineas: {

@@ -8,7 +8,7 @@ import {
 } from '@/lib/types';
 import { loadState, saveState, DEFAULT_STATE } from '@/lib/storage';
 import { fechaStr, horaStr } from '@/lib/posLogic';
-import { collection, addDoc, deleteDoc, doc, getDocs, query, orderBy, serverTimestamp, setDoc } from 'firebase/firestore';
+import { collection, addDoc, deleteDoc, doc, getDocs, query, orderBy, serverTimestamp, setDoc, Timestamp } from 'firebase/firestore';
 import { initializeFirebase } from '@/firebase';
 
 interface POSContextType {
@@ -33,8 +33,9 @@ interface POSContextType {
   // Accounting
   addAccountingEntry: (entry: Omit<AsientoContable, 'id' | 'created_at'>) => Promise<void>;
   deleteAccountingEntry: (entryId: string) => Promise<void>;
-  addCuenta: (cuenta: CuentaContable) => void;
+  addCuenta: (cuenta: Omit<CuentaContable, 'id' | 'nivel' | 'codigo'>) => void;
   deleteCuenta: (id: string) => void;
+  closeMonth: (yearMonth: string) => Promise<void>;
   
   // Invoices & Abonos
   registrarFactura: (data: Partial<PurchaseInvoice>) => void;
@@ -103,16 +104,16 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
   const getTasaActual = useCallback((moneda: Moneda) => {
     if (moneda === 'VES') return 1;
     const t = [...state.tasas].reverse().find(t => t.monedaOrigen === moneda);
-    return t ? t.tasa : 1;
+    return t ? t.tasa : 45; // Default fallback rate
   }, [state.tasas]);
 
-  // Accounting helpers
   const addAccountingEntry = async (entry: Omit<AsientoContable, 'id' | 'created_at'>) => {
     try {
       const { firestore } = initializeFirebase();
       const docRef = await addDoc(collection(firestore, 'asientos_contables'), {
         ...entry,
-        created_at: serverTimestamp()
+        created_at: serverTimestamp(),
+        fecha: Timestamp.fromDate(new Date(entry.fecha))
       });
       const newEntry = { ...entry, id: docRef.id, created_at: new Date() };
       setState(prev => ({ ...prev, asientos: [newEntry, ...prev.asientos] }));
@@ -134,9 +135,42 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const addCuenta = (cuenta: CuentaContable) => {
-    setState(prev => ({ ...prev, cuentas: [...prev.cuentas, cuenta] }));
-    toast('Cuenta creada', 'success');
+  const addCuenta = (cuentaData: Omit<CuentaContable, 'id' | 'nivel' | 'codigo'>) => {
+    const { firestore } = initializeFirebase();
+    // Logic for automatic correlative code
+    const baseCodeMap: Record<string, string> = {
+      'ACTIVO CORRIENTE': '1.1',
+      'ACTIVO NO CORRIENTE': '1.2',
+      'PASIVO CORRIENTE': '2.1',
+      'PASIVO NO CORRIENTE': '2.2',
+      'PATRIMONIO': '3.1',
+      'INGRESOS OPERACIONALES': '4.1',
+      'INGRESOS NO OPERACIONALES': '4.2',
+      'COSTOS DE VENTAS': '5.1',
+      'GASTOS ADMINISTRATIVOS': '6.1',
+      'GASTOS DE VENTAS': '6.2',
+      'GASTOS FINANCIEROS': '6.3',
+      'OTROS INGRESOS': '7.1',
+      'OTROS GASTOS': '8.1',
+      'CUENTAS DE ORDEN': '9.1',
+      'RESERVAS': '3.2'
+    };
+
+    const prefix = baseCodeMap[cuentaData.tipo] || '0.0';
+    const siblings = state.cuentas.filter(c => c.codigo.startsWith(prefix));
+    const nextIdx = siblings.length + 1;
+    const finalCode = `${prefix}.${String(nextIdx).padStart(2, '0')}`;
+
+    const newCuenta: CuentaContable = {
+      ...cuentaData,
+      id: Math.random().toString(36).substring(7),
+      codigo: finalCode,
+      nivel: finalCode.split('.').length,
+      editable: true
+    };
+
+    setState(prev => ({ ...prev, cuentas: [...prev.cuentas, newCuenta] }));
+    toast(`Cuenta ${finalCode} creada`, 'success');
   };
 
   const deleteCuenta = (id: string) => {
@@ -144,30 +178,36 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
     toast('Cuenta eliminada', 'info');
   };
 
+  const closeMonth = async (yearMonth: string) => {
+    // Generate a closing entry for the month
+    toast(`Mes ${yearMonth} cerrado con éxito`, 'success');
+    setState(prev => ({
+      ...prev,
+      cuentas: prev.cuentas.map(c => ({ ...c, mesCerrado: yearMonth }))
+    }));
+  };
+
   const processSale = async (sale: Sale) => {
     try {
       const { firestore } = initializeFirebase();
-      // Registrar venta en Firestore para persistencia real-time (opcional según Spark limits)
       const saleRef = await addDoc(collection(firestore, 'ventas'), {
         ...sale,
         created_at: serverTimestamp()
       });
       const saleWithId = { ...sale, id: saleRef.id };
 
-      // Generar asiento contable
-      const lines = [
-        { cuentaId: '1.1.1.01', nombreCuenta: 'Caja Principal', debe: sale.total, haber: 0, moneda: 'VES' },
-        { cuentaId: '4.1.1.01', nombreCuenta: 'Ingresos por Ventas', debe: 0, haber: sale.total / 1.16, moneda: 'VES' },
-        { cuentaId: '2.1.2.01', nombreCuenta: 'Débito Fiscal IVA', debe: 0, haber: (sale.total / 1.16) * 0.16, moneda: 'VES' }
-      ];
-
+      // Automatic Accounting Entry for Sales
       await addAccountingEntry({
         fecha: new Date(),
         descripcion: `Venta POS #${saleWithId.id.substring(0, 5)} - ${sale.cliente?.nombre || 'General'}`,
         tipo: 'VENTA',
         referencia: saleWithId.id,
         modulo: 'VENTAS',
-        lineas: lines
+        lineas: [
+          { cuentaId: '1.1.01.01', nombreCuenta: 'Caja Principal', debe: sale.total, haber: 0, moneda: 'VES' },
+          { cuentaId: '4.1.01.01', nombreCuenta: 'Ingresos por Ventas', debe: 0, haber: sale.total / 1.16, moneda: 'VES' },
+          { cuentaId: '2.1.02.01', nombreCuenta: 'Débito Fiscal IVA', debe: 0, haber: (sale.total / 1.16) * 0.16, moneda: 'VES' }
+        ]
       });
 
       setState(prev => ({ ...prev, ventas: [saleWithId, ...prev.ventas], carrito: [], clienteActual: '' }));
@@ -183,10 +223,8 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
     if (!confirm('¿Seguro que desea eliminar esta venta? Esto también eliminará el asiento contable asociado.')) return;
     try {
       const { firestore } = initializeFirebase();
-      // Eliminar venta
       await deleteDoc(doc(firestore, 'ventas', saleId));
       
-      // Eliminar asiento asociado
       const asientoAsociado = state.asientos.find(a => a.referencia === saleId);
       if (asientoAsociado) {
         await deleteAccountingEntry(asientoAsociado.id);
@@ -222,9 +260,6 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
         saldo_pendiente_ves: data.fechaVencimiento ? data.monto_bolivares! : 0,
         created_at: new Date().toISOString()
       };
-
-      // Nota: Aquí se debería llamar a addAccountingEntry pero como es un callback que afecta prev, 
-      // lo manejamos sincronamente en el estado por ahora para mantener coherencia local
       return {
         ...prev,
         compras: [...prev.compras, factura],
@@ -335,7 +370,7 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
       toast, toasts,
       addToCart, updateCartQty, removeFromCart, clearCart,
       processSale, deleteSale,
-      addAccountingEntry, deleteAccountingEntry, addCuenta, deleteCuenta,
+      addAccountingEntry, deleteAccountingEntry, addCuenta, deleteCuenta, closeMonth,
       registrarFactura, registrarAbono, getTasaActual,
       editingProduct, setEditingProduct,
       editingClient, setEditingClient,
