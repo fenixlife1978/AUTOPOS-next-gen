@@ -19,6 +19,11 @@ import HistoryWindow from '@/components/Windows/HistoryWindow';
 import TicketWindow from '@/components/Windows/TicketWindow';
 import ClientsWindow from '@/components/Windows/ClientsWindow';
 import AddClientWindow from '@/components/Windows/AddClientWindow';
+import SuppliersWindow from '@/components/Windows/SuppliersWindow';
+import AddSupplierWindow from '@/components/Windows/AddSupplierWindow';
+import InvoicesWindow from '@/components/Windows/InvoicesWindow';
+import AddInvoiceWindow from '@/components/Windows/AddInvoiceWindow';
+import AccountsPayableWindow from '@/components/Windows/AccountsPayableWindow';
 
 function MainLayout() {
   const { clearCart, openWindow, closeWindow, activeWindow, setIsCartMobileOpen, mobileTab, setMobileTab } = usePOS();
@@ -77,7 +82,6 @@ function MainLayout() {
       <ToastContainer />
       <WindowOverlay />
       
-      {/* All windows rendered here, they handle their own internal 'isOpen' state via Context */}
       <InventoryWindow />
       <AddProductWindow />
       <CobrarWindow />
@@ -85,8 +89,11 @@ function MainLayout() {
       <TicketWindow />
       <ClientsWindow />
       <AddClientWindow />
-      
-      {/* Note: In a full implementation, Suppliers, Accounts, Reports etc would be here too */}
+      <SuppliersWindow />
+      <AddSupplierWindow />
+      <InvoicesWindow />
+      <AddInvoiceWindow />
+      <AccountsPayableWindow />
     </>
   );
 }

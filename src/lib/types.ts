@@ -1,8 +1,9 @@
 
 export type Category = 'lubricante' | 'repuesto' | 'servicio' | 'general' | 'todos';
-export type Method = 'efectivo' | 'tarjeta' | 'transferencia';
-export type AccountStatus = 'pendiente' | 'pagada' | 'vencida';
+export type Method = 'efectivo' | 'tarjeta' | 'transferencia' | 'punto_venta';
+export type AccountStatus = 'pendiente' | 'pagada' | 'vencida' | 'parcial';
 export type AccountType = 'cobrar' | 'pagar';
+export type FacturaTipo = 'FISCAL_SENIAT' | 'NOTA_ENTREGA';
 
 export interface Product {
   id: number;
@@ -33,6 +34,7 @@ export interface Client {
 export interface Supplier {
   id: number;
   nombre: string;
+  rif?: string;
   contacto?: string;
   telefono?: string;
   email?: string;
@@ -68,6 +70,32 @@ export interface Sale {
   nota?: string;
 }
 
+export interface PurchaseInvoice {
+  id: number;
+  proveedorId: number;
+  numeroFactura: string;
+  fechaEmision: string;
+  fechaVencimiento?: string;
+  montoDolares?: number;
+  montoBolivares: number;
+  tasaBCV?: number;
+  tipoFactura: FacturaTipo;
+  imagenUrl?: string;
+  estadoPago: AccountStatus;
+  totalPagado: number;
+  saldoPendiente: number;
+  nota?: string;
+}
+
+export interface PurchasePayment {
+  id: number;
+  facturaId: number;
+  montoBolivares: number;
+  fechaAbono: string;
+  metodoPago: Method;
+  referencia?: string;
+}
+
 export interface PaymentRecord {
   fecha: string;
   nota: string;
@@ -97,12 +125,17 @@ export interface AppState {
   clientes: Client[];
   proveedores: Supplier[];
   ventas: Sale[];
+  compras: PurchaseInvoice[];
+  abonos: PurchasePayment[];
   cuentas: Account[];
   carrito: CartItem[];
   clienteActual: string;
+  storageMode: 'local' | 'hybrid' | 'cloud';
   nextProdId: number;
   nextCliId: number;
   nextProvId: number;
   nextVentaId: number;
+  nextCompraId: number;
+  nextAbonoId: number;
   nextCuentaId: number;
 }

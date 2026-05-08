@@ -2,7 +2,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { AppState, Product, Client, Supplier, Sale, Account, CartItem, Category, Method } from '@/lib/types';
+import { AppState, Product, Client, Supplier, Sale, Account, CartItem, Category, Method, PurchaseInvoice, PurchasePayment } from '@/lib/types';
 import { loadState, saveState, DEFAULT_STATE } from '@/lib/storage';
 import { fechaStr, horaStr, fechaISO } from '@/lib/posLogic';
 
@@ -28,6 +28,8 @@ interface POSContextType {
   setEditingClient: (c: Client | null) => void;
   editingSupplier: Supplier | null;
   setEditingSupplier: (s: Supplier | null) => void;
+  editingInvoice: PurchaseInvoice | null;
+  setEditingInvoice: (i: PurchaseInvoice | null) => void;
   currentSaleForTicket: Sale | null;
   setCurrentSaleForTicket: (s: Sale | null) => void;
   accountFiltroTipo: 'cobrar' | 'pagar';
@@ -52,6 +54,7 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
+  const [editingInvoice, setEditingInvoice] = useState<PurchaseInvoice | null>(null);
   const [currentSaleForTicket, setCurrentSaleForTicket] = useState<Sale | null>(null);
   const [accountFiltroTipo, setAccountFiltroTipo] = useState<'cobrar' | 'pagar'>('cobrar');
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
@@ -157,6 +160,7 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
       editingProduct, setEditingProduct,
       editingClient, setEditingClient,
       editingSupplier, setEditingSupplier,
+      editingInvoice, setEditingInvoice,
       currentSaleForTicket, setCurrentSaleForTicket,
       accountFiltroTipo, setAccountFiltroTipo,
       editingAccount, setEditingAccount,
