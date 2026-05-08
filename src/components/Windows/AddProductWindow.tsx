@@ -6,7 +6,7 @@ import { usePOS } from '../POSContext';
 import BaseWindow from './BaseWindow';
 import { calcularPrecio as calcFinal } from '@/lib/posLogic';
 import { getAutomotiveCatalog, CatalogItem } from '@/lib/automotive-catalog';
-import { Search, Plus, Check } from 'lucide-react';
+import { Search, Plus, Check, Info } from 'lucide-react';
 
 export default function AddProductWindow() {
   const { state, setState, activeWindow, closeWindow, editingProduct, toast, addCustomCategory } = usePOS();
@@ -30,15 +30,16 @@ export default function AddProductWindow() {
   const [showNewCatModal, setShowNewCatModal] = useState(false);
   const [newCatName, setNewCatName] = useState('');
 
-  // Carga del catálogo en RAM
+  // Carga del catálogo masivo en RAM
   const catalog = useMemo(() => getAutomotiveCatalog(), []);
 
   const filteredCatalog = useMemo(() => {
     if (searchQuery.length < 2) return [];
+    const q = searchQuery.toLowerCase();
     return catalog.filter(item => 
-      item.nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.marca.toLowerCase().includes(searchQuery.toLowerCase())
-    ).slice(0, 50); // Límite para rendimiento UI
+      item.nombre.toLowerCase().includes(q) ||
+      item.marca.toLowerCase().includes(q)
+    ).slice(0, 500); // Mostramos hasta 500 resultados reales por búsqueda
   }, [catalog, searchQuery]);
 
   useEffect(() => {
@@ -73,7 +74,6 @@ export default function AddProductWindow() {
     }
   }, [editingProduct, activeWindow]);
 
-  // Generación automática de SKU
   const generateSKU = (catName: string) => {
     const prefix = catName.substring(0, 3).toUpperCase();
     const count = state.productos.filter(p => p.categoria === catName).length + 1;
@@ -115,6 +115,7 @@ export default function AddProductWindow() {
     }));
     setShowCatalog(false);
     setSearchQuery('');
+    toast('Producto cargado desde catálogo', 'success');
   };
 
   const handleCalc = () => {
@@ -172,13 +173,13 @@ export default function AddProductWindow() {
     >
       <div className="mb-4 bg-[var(--bg3)] p-3 rounded-lg border border-[var(--border)]">
         <label className="form-label text-[var(--accent)] font-bold mb-2 flex items-center gap-2">
-          <Search size={14} /> BUSCADOR INTELIGENTE EN CATÁLOGO (+10,000)
+          <Search size={14} /> BUSCADOR INTELIGENTE (+10,000 REGISTROS)
         </label>
         <div className="relative">
           <input 
             type="text" 
             className="form-input" 
-            placeholder="Escriba marca o producto (ej: Shell 15W40, Filtro Bosch...)" 
+            placeholder="Buscar en catálogo real (ej: 15W40 PDV, Filtro Bosch, Bujía NGK...)" 
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
@@ -187,15 +188,19 @@ export default function AddProductWindow() {
           />
           {showCatalog && filteredCatalog.length > 0 && (
             <div className="absolute top-full left-0 right-0 z-[100] mt-1 bg-[var(--bg2)] border border-[var(--border)] rounded-lg shadow-2xl max-h-60 overflow-y-auto">
+              <div className="p-2 text-[10px] text-muted border-b border-[var(--border)] flex justify-between">
+                <span>MOSTRANDO {filteredCatalog.length} RESULTADOS</span>
+                <span className="flex items-center gap-1"><Info size={10} /> Seleccione para autocompletar</span>
+              </div>
               {filteredCatalog.map((item, idx) => (
                 <div 
                   key={idx} 
-                  className="p-2 hover:bg-[var(--bg4)] cursor-pointer flex justify-between items-center border-b border-[var(--border)]/50"
+                  className="p-2 hover:bg-[var(--bg4)] cursor-pointer flex justify-between items-center border-b border-[var(--border)]/50 transition-colors"
                   onClick={() => selectFromCatalog(item)}
                 >
                   <div className="flex flex-col">
-                    <span className="text-xs font-bold">{item.nombre}</span>
-                    <span className="text-[10px] text-muted">{item.marca} | {item.categoria}</span>
+                    <span className="text-xs font-bold text-[var(--fg)]">{item.nombre}</span>
+                    <span className="text-[10px] text-muted">{item.marca} | Categoría: {item.categoria.toUpperCase()}</span>
                   </div>
                   <Plus size={12} className="text-[var(--accent)]" />
                 </div>
