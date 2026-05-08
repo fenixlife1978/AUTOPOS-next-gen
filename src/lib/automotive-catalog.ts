@@ -1,7 +1,7 @@
 
 /**
  * @fileOverview Catálogo inteligente de productos automotrices cargado en RAM.
- * Contiene una base de datos exhaustiva de marcas y productos comunes en Venezuela (+10,000 registros).
+ * Contiene una base de datos exhaustiva de marcas y productos comunes en Venezuela (+15,000 registros).
  */
 
 export interface CatalogItem {
@@ -20,7 +20,13 @@ const MARCAS_REPUESTOS = [
   'Bosch', 'Denso', 'NGK', 'AC Delco', 'Champion', 'Fram', 'Wix', 'Mann Filter', 'Gabriel',
   'KYB', 'Monroe', 'Wagner', 'Bendix', 'Moog', 'Gates', 'Dayco', 'Mopar', 'Toyota Genuine',
   'Ford Motorcraft', 'GM Genuine', 'Honda OEM', 'Mazda Genuine', 'Nissan Genuine', 'Federal Mogul',
-  'Mahle', 'Perfect Circle', 'Hastings', 'Fel-Pro', 'National', 'SKF', 'Timken', 'NSK', 'Koyo'
+  'Mahle', 'Perfect Circle', 'Hastings', 'Fel-Pro', 'National', 'SKF', 'Timken', 'NSK', 'Koyo',
+  'Aisin', 'Valeo', 'Luk', 'Sachs', 'Brembo', 'Hitachi', 'Tokico', 'CTR', '555', 'GMB'
+];
+
+const MARCAS_ELECTRICAS = [
+  'Delphi', 'Magneti Marelli', 'Standard', 'Hella', 'Denso', 'Bosch', 'Valeo', 'Mitsubishi Electric',
+  'Lucas', 'Prestolite', 'VDO', 'Continental'
 ];
 
 const TIPOS_LUBRICANTE = [
@@ -31,7 +37,8 @@ const TIPOS_LUBRICANTE = [
   'Aceite para Transmisión Automática ATF+4', 'Aceite para Transmisión CVT',
   'Aceite de Transmisión 80W-90', 'Valvulina 85W-140', 'Líquido de Frenos DOT 3',
   'Líquido de Frenos DOT 4', 'Refrigerante Rojo 50/50', 'Refrigerante Verde 50/50',
-  'Limpia Parabrisas', 'Grasa de Chasis', 'Grasa de Rodamiento'
+  'Limpia Parabrisas', 'Grasa de Chasis', 'Grasa de Rodamiento', 'Aditivo de Inyectores',
+  'Tratamiento de Motor', 'Limpia Motores Externo'
 ];
 
 const TIPOS_REPUESTO = [
@@ -43,20 +50,38 @@ const TIPOS_REPUESTO = [
   'Amortiguador Delantero Derecho', 'Amortiguador Trasero', 'Bomba de Agua', 'Bomba de Gasolina',
   'Terminal de Dirección', 'Muñón Inferior', 'Muñón Superior', 'Rodamiento de Rueda Delantero',
   'Rodamiento de Rueda Trasero', 'Estopera de Cigüeñal', 'Empacadura de Cámara', 'Goma de Válvula',
-  'Sensor de Oxígeno', 'Sensor MAP', 'Sensor CKP', 'Bobina de Encendido', 'Cables de Bujía',
-  'Termostato', 'Radiador', 'Alternador', 'Motor de Arranque', 'Batería 800 AMP', 'Batería 1100 AMP'
+  'Termostato', 'Radiador', 'Alternador', 'Motor de Arranque', 'Batería 800 AMP', 'Batería 1100 AMP',
+  'Bomba de Aceite', 'Cadena de Tiempo', 'Kit de Distribución', 'Válvula PCV', 'Tapa de Radiador',
+  'Manguera de Radiador Superior', 'Manguera de Radiador Inferior', 'Base de Motor', 'Base de Caja'
+];
+
+const TIPOS_ELECTRICOS = [
+  'Sensor de Oxígeno', 'Sensor MAP', 'Sensor CKP (Cigüeñal)', 'Sensor CMP (Leva)', 'Sensor TPS',
+  'Sensor de Temperatura', 'Bobina de Encendido', 'Cables de Bujía', 'Módulo de Encendido',
+  'Fusible 10A', 'Fusible 15A', 'Fusible 20A', 'Relé 4 Pines', 'Relé 5 Pines', 'Bombillo H4',
+  'Bombillo H7', 'Bombillo 1157 (Doble Contacto)', 'Bombillo LED para Faro', 'Conector de Inyector',
+  'Pila de Gasolina', 'Flotante de Gasolina', 'Sensor ABS', 'Switch de Freno'
+];
+
+const TIPOS_GENERAL = [
+  'Tirras (Zip Ties) Pack 100u', 'Grapas para Parachoques', 'Tornillo Milimétrico 10mm',
+  'Abrazadera de Acero', 'Cinta Aislante Cobra', 'Pega Tanque', 'Silicona Gris RTV',
+  'Limpia Carburador (Carbu-Clean)', 'Goma de Limpiaparabrisas', 'Alfombras Universales'
 ];
 
 const MODELOS_VEHICULOS = [
-  'Toyota Corolla', 'Toyota Hilux', 'Toyota Fortuner', 'Ford Fiesta', 'Ford Explorer',
-  'Chevrolet Aveo', 'Chevrolet Optra', 'Chevrolet Silverado', 'Hyundai Elantra', 'Hyundai Accent',
-  'Honda Civic', 'Jeep Grand Cherokee', 'Mitsubishi Lancer', 'Mazda 3'
+  'Toyota Corolla', 'Toyota Hilux', 'Toyota Fortuner', 'Toyota Yaris', 'Toyota 4Runner',
+  'Ford Fiesta', 'Ford Explorer', 'Ford EcoSport', 'Ford F-150', 'Ford Cargo',
+  'Chevrolet Aveo', 'Chevrolet Optra', 'Chevrolet Silverado', 'Chevrolet Cruze', 'Chevrolet Spark',
+  'Hyundai Elantra', 'Hyundai Accent', 'Hyundai Tucson', 'Hyundai Getz',
+  'Honda Civic', 'Honda CR-V', 'Jeep Grand Cherokee', 'Jeep Cherokee (KK)', 'Jeep Wrangler',
+  'Mitsubishi Lancer', 'Mitsubishi Montero', 'Mazda 3', 'Mazda BT-50', 'Kia Rio', 'Kia Sportage'
 ];
 
 function generateCatalog(): CatalogItem[] {
   const catalog: CatalogItem[] = [];
   
-  // Generar lubricantes por marca (expandido)
+  // 1. LUBRICANTES (~1,000 variaciones)
   MARCAS_LUBRICANTES.forEach(marca => {
     TIPOS_LUBRICANTE.forEach(tipo => {
       catalog.push({
@@ -68,10 +93,10 @@ function generateCatalog(): CatalogItem[] {
     });
   });
 
-  // Generar repuestos por marca y modelo de vehículo (masivo)
-  MARCAS_REPUESTOS.forEach(marca => {
-    TIPOS_REPUESTO.forEach(tipo => {
-      // Para hacer la lista más real, asociamos repuestos a modelos comunes
+  // 2. REPUESTOS MECÁNICOS (~9,000 variaciones: Partes x Marcas x Modelos)
+  const repuestosBase = TIPOS_REPUESTO.slice(0, 20); // Limitar combinaciones para no exceder RAM excesivamente pero ser amplio
+  MARCAS_REPUESTOS.slice(0, 15).forEach(marca => {
+    repuestosBase.forEach(tipo => {
       MODELOS_VEHICULOS.forEach(modelo => {
         catalog.push({
           nombre: `${tipo} ${marca} para ${modelo}`,
@@ -83,13 +108,39 @@ function generateCatalog(): CatalogItem[] {
     });
   });
 
-  // Añadir servicios comunes con variantes
+  // 3. PARTES ELÉCTRICAS Y SENSORES (~3,000 variaciones)
+  MARCAS_ELECTRICAS.forEach(marca => {
+    TIPOS_ELECTRICOS.forEach(tipo => {
+      MODELOS_VEHICULOS.slice(0, 15).forEach(modelo => {
+        catalog.push({
+          nombre: `${tipo} ${marca} (${modelo})`,
+          marca: marca,
+          categoria: 'repuesto',
+          unidad: 'pieza'
+        });
+      });
+    });
+  });
+
+  // 4. FERRETERÍA Y GENERAL
+  TIPOS_GENERAL.forEach(item => {
+    catalog.push({
+      nombre: item,
+      marca: 'Genérico',
+      categoria: 'repuesto',
+      unidad: 'pieza'
+    });
+  });
+
+  // 5. SERVICIOS DETALLADOS
   const servicios = [
     'Cambio de Aceite y Filtro', 'Entonación Mayor (6 Cil)', 'Entonación Mayor (4 Cil)',
     'Limpieza de Inyectores por Ultrasonido', 'Revisión de Frenos y Ajuste', 'Escaneo Computarizado OBDII',
     'Cambio de Correa de Tiempo', 'Servicio de Aire Acondicionado (Carga Gas)',
     'Balanceo y Rotación de Cauchos', 'Lavado de Motor', 'Cambio de Pastillas de Freno',
-    'Revisión de Tren Delantero', 'Cambio de Amortiguadores', 'Instalación de Kit de Embrague'
+    'Revisión de Tren Delantero', 'Cambio de Amortiguadores', 'Instalación de Kit de Embrague',
+    'Lavado Sencillo', 'Lavado y Aspirado', 'Pulitura de Faros', 'Limpieza de Tapicería',
+    'Mantenimiento de Alternador', 'Mantenimiento de Motor de Arranque', 'Diagnóstico Eléctrico'
   ];
   
   servicios.forEach(s => {
