@@ -1,6 +1,6 @@
 
 export type Category = 'lubricante' | 'repuesto' | 'servicio' | 'general' | 'todos';
-export type Method = 'efectivo' | 'tarjeta' | 'transferencia' | 'punto_venta';
+export type Method = 'efectivo_bs' | 'pago_movil' | 'biopago' | 'transferencia' | 'efectivo_usd' | 'tarjeta' | 'zelle';
 export type AccountStatus = 'pendiente' | 'pagada' | 'vencida' | 'parcial';
 export type AccountType = 'cobrar' | 'pagar';
 export type FacturaTipo = 'FISCAL_SENIAT' | 'NOTA_ENTREGA';

@@ -5,6 +5,17 @@ import React, { useState } from 'react';
 import { usePOS } from '../POSContext';
 import BaseWindow from './BaseWindow';
 import { fmt, fechaISO } from '@/lib/posLogic';
+import { Method } from '@/lib/types';
+
+const METHOD_LABELS: Record<Method, string> = {
+  efectivo_bs: 'Efec. Bs.',
+  efectivo_usd: 'Efec. USD',
+  pago_movil: 'P. Móvil',
+  biopago: 'BioPago',
+  transferencia: 'Transf.',
+  tarjeta: 'Tarjeta',
+  zelle: 'Zelle'
+};
 
 export default function HistoryWindow() {
   const { state, activeWindow, closeWindow } = usePOS();
@@ -54,7 +65,7 @@ export default function HistoryWindow() {
                   <td style={{ fontFamily: 'monospace', color: 'var(--muted)' }}>#{String(v.id).padStart(5, '0')}</td>
                   <td>{v.fechaStr}</td>
                   <td>{v.cliente ? v.cliente.nombre : 'General'}</td>
-                  <td><span className={`badge badge-${v.metodo}`}>{v.metodo}</span></td>
+                  <td><span className={`badge badge-${v.metodo}`}>{METHOD_LABELS[v.metodo]}</span></td>
                   <td style={{ fontWeight: 700, color: 'var(--accent)' }}>{fmt(v.total)}</td>
                 </tr>
               ))}

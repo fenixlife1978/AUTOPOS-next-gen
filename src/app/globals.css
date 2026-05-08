@@ -599,6 +599,9 @@ h1, h2, h3, h4, h5 {
   flex-direction: column;
   overflow: hidden;
   animation: winOpen .2s ease;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .app-window[style*="display: flex"] {
@@ -815,57 +818,28 @@ h1, h2, h3, h4, h5 {
   font-size: 10px;
   font-weight: 600;
   display: inline-block;
+  white-space: nowrap;
 }
 
-.badge-lubricante {
-  background: rgba(245, 158, 11, .15);
-  color: var(--accent);
-}
+/* Payment Badges */
+.badge-efectivo_bs { background: rgba(16, 185, 129, .15); color: #10b981; }
+.badge-efectivo_usd { background: rgba(245, 158, 11, .15); color: #f59e0b; }
+.badge-pago_movil { background: rgba(59, 130, 246, .15); color: #3b82f6; }
+.badge-biopago { background: rgba(168, 85, 247, .15); color: #a855f7; }
+.badge-transferencia { background: rgba(99, 102, 241, .15); color: #6366f1; }
+.badge-tarjeta { background: rgba(236, 72, 153, .15); color: #ec4899; }
+.badge-zelle { background: rgba(139, 92, 246, .15); color: #8b5cf6; }
 
-.badge-repuesto {
-  background: rgba(59, 130, 246, .15);
-  color: var(--info);
-}
+/* Category Badges */
+.badge-lubricante { background: rgba(245, 158, 11, .15); color: var(--accent); }
+.badge-repuesto { background: rgba(59, 130, 246, .15); color: var(--info); }
+.badge-servicio { background: rgba(16, 185, 129, .15); color: var(--success); }
+.badge-general { background: rgba(122, 122, 152, .15); color: var(--muted); }
 
-.badge-servicio {
-  background: rgba(16, 185, 129, .15);
-  color: var(--success);
-}
-
-.badge-general {
-  background: rgba(122, 122, 152, .15);
-  color: var(--muted);
-}
-
-.badge-efectivo {
-  background: rgba(16, 185, 129, .15);
-  color: var(--success);
-}
-
-.badge-tarjeta {
-  background: rgba(59, 130, 246, .15);
-  color: var(--info);
-}
-
-.badge-transferencia {
-  background: rgba(168, 85, 247, .15);
-  color: var(--purple);
-}
-
-.badge-pendiente {
-  background: rgba(245, 158, 11, .15);
-  color: var(--accent);
-}
-
-.badge-pagada {
-  background: rgba(16, 185, 129, .15);
-  color: var(--success);
-}
-
-.badge-vencida {
-  background: rgba(239, 68, 68, .15);
-  color: var(--danger);
-}
+/* Status Badges */
+.badge-pendiente { background: rgba(245, 158, 11, .15); color: var(--accent); }
+.badge-pagada { background: rgba(16, 185, 129, .15); color: var(--success); }
+.badge-vencida { background: rgba(239, 68, 68, .15); color: var(--danger); }
 
 .toast-container {
   position: fixed;
@@ -891,27 +865,13 @@ h1, h2, h3, h4, h5 {
   min-width: 250px;
 }
 
-.toast.success {
-  border-left: 3px solid var(--success);
-}
-
-.toast.error {
-  border-left: 3px solid var(--danger);
-}
-
-.toast.info {
-  border-left: 3px solid var(--info);
-}
+.toast.success { border-left: 3px solid var(--success); }
+.toast.error { border-left: 3px solid var(--danger); }
+.toast.info { border-left: 3px solid var(--info); }
 
 @keyframes toastIn {
-  from {
-    opacity: 0;
-    transform: translateX(40px)
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0)
-  }
+  from { opacity: 0; transform: translateX(40px) }
+  to { opacity: 1; transform: translateX(0) }
 }
 
 .bg-glow {
@@ -925,17 +885,8 @@ h1, h2, h3, h4, h5 {
   z-index: 0;
 }
 
-.bg-glow-1 {
-  top: -100px;
-  left: -100px;
-  background: var(--accent);
-}
-
-.bg-glow-2 {
-  bottom: -100px;
-  right: -100px;
-  background: var(--info);
-}
+.bg-glow-1 { top: -100px; left: -100px; background: var(--accent); }
+.bg-glow-2 { bottom: -100px; right: -100px; background: var(--info); }
 
 .numpad {
   display: grid;

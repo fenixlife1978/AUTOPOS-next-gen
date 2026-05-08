@@ -1,15 +1,25 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { usePOS } from '../POSContext';
 import BaseWindow from './BaseWindow';
 import { fmt, fechaStr, horaStr } from '@/lib/posLogic';
-import { Method, Sale, SaleItem } from '@/lib/types';
+import { Method, Sale } from '@/lib/types';
+
+const PAYMENT_METHODS: { id: Method; label: string; icon: string }[] = [
+  { id: 'efectivo_bs', label: 'Efectivo Bs.', icon: 'fa-money-bill-1' },
+  { id: 'pago_movil', label: 'Pago Móvil', icon: 'fa-mobile-screen-button' },
+  { id: 'biopago', label: 'BioPago', icon: 'fa-fingerprint' },
+  { id: 'transferencia', label: 'Transferencia', icon: 'fa-building-columns' },
+  { id: 'efectivo_usd', label: 'Efectivo USD', icon: 'fa-dollar-sign' },
+  { id: 'tarjeta', label: 'Tarjeta', icon: 'fa-credit-card' },
+  { id: 'zelle', label: 'Zelle', icon: 'fa-z' },
+];
 
 export default function CobrarWindow() {
   const { state, setState, activeWindow, closeWindow, openWindow, setCurrentSaleForTicket, toast } = usePOS();
-  const [metodo, setMetodo] = useState<Method>('efectivo');
+  const [metodo, setMetodo] = useState<Method>('efectivo_bs');
   const [montoRecibido, setMontoRecibido] = useState('');
   const [nota, setNota] = useState('');
 
@@ -24,7 +34,10 @@ export default function CobrarWindow() {
 
   const recibidoNum = parseFloat(montoRecibido) || 0;
   const cambio = Math.max(0, recibidoNum - total);
-  const canProcess = metodo !== 'efectivo' || recibidoNum >= total;
+  
+  // Show numpad only for cash methods
+  const isCash = metodo === 'efectivo_bs' || metodo === 'efectivo_usd';
+  const canProcess = !isCash || recibidoNum >= total;
 
   const numpadInput = (val: string) => {
     if (val === 'del') setMontoRecibido(prev => prev.slice(0, -1));
@@ -39,7 +52,6 @@ export default function CobrarWindow() {
   const handleProcess = () => {
     if (!cartItems.length) return;
     
-    // Update stocks
     setState(prev => {
       const newProductos = prev.productos.map(p => {
         const itemInCart = cartItems.find(i => i?.id === p.id);
@@ -70,8 +82,8 @@ export default function CobrarWindow() {
         iva,
         total,
         metodo,
-        recibido: metodo === 'efectivo' ? recibidoNum : total,
-        cambio: metodo === 'efectivo' ? cambio : 0,
+        recibido: isCash ? recibidoNum : total,
+        cambio: isCash ? cambio : 0,
         nota
       };
 
@@ -98,6 +110,7 @@ export default function CobrarWindow() {
       icon="fa-cash-register" 
       isOpen={activeWindow === 'cobrar'}
       onClose={closeWindow}
+      width="480px"
       footer={
         <>
           <button className="btn btn-secondary" onClick={closeWindow}>Cancelar</button>
@@ -113,25 +126,35 @@ export default function CobrarWindow() {
       </div>
       
       <div className="form-group">
-        <label className="form-label">Metodo de pago</label>
-        <div style={{ display: 'flex', gap: '6px' }}>
-          <button className={`btn ${metodo === 'efectivo' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setMetodo('efectivo')}><i className="fas fa-money-bill"></i> Efectivo</button>
-          <button className={`btn ${metodo === 'tarjeta' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setMetodo('tarjeta')}><i className="fas fa-credit-card"></i> Tarjeta</button>
-          <button className={`btn ${metodo === 'transferencia' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setMetodo('transferencia')}><i className="fas fa-building-columns"></i> Transfer.</button>
+        <label className="form-label">Método de pago</label>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+          {PAYMENT_METHODS.map((m) => (
+            <button 
+              key={m.id}
+              className={`btn ${metodo === m.id ? 'btn-primary' : 'btn-secondary'}`} 
+              onClick={() => {
+                setMetodo(m.id);
+                if (m.id !== 'efectivo_bs' && m.id !== 'efectivo_usd') setMontoRecibido('');
+              }}
+              style={{ justifyContent: 'flex-start' }}
+            >
+              <i className={`fas ${m.icon}`} style={{ width: '16px' }}></i> {m.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {metodo === 'efectivo' && (
-        <div id="efectivoPanel">
+      {isCash && (
+        <div id="efectivoPanel" style={{ marginTop: '16px', padding: '12px', background: 'var(--bg3)', borderRadius: '10px', border: '1px solid var(--border)' }}>
           <div className="form-group">
-            <label className="form-label">Monto recibido</label>
+            <label className="form-label">Monto recibido ({metodo === 'efectivo_bs' ? 'Bs.' : '$'})</label>
             <input 
               type="text" 
               className="form-input" 
               value={montoRecibido}
-              style={{ fontSize: '20px', fontWeight: 700, fontFamily: 'Space Grotesk', textAlign: 'center' }}
+              style={{ fontSize: '24px', fontWeight: 700, fontFamily: 'Space Grotesk', textAlign: 'center', background: 'var(--bg)' }}
               readOnly
-              placeholder="$0.00" 
+              placeholder="0.00" 
             />
           </div>
           <div className="numpad" style={{ marginBottom: '12px' }}>
@@ -148,9 +171,9 @@ export default function CobrarWindow() {
         </div>
       )}
 
-      <div className="form-group" style={{ marginTop: '10px' }}>
-        <label className="form-label">Nota (opcional)</label>
-        <input type="text" className="form-input" value={nota} onChange={(e) => setNota(e.target.value)} placeholder="Referencia..." />
+      <div className="form-group" style={{ marginTop: '16px' }}>
+        <label className="form-label">Nota / Referencia (opcional)</label>
+        <input type="text" className="form-input" value={nota} onChange={(e) => setNota(e.target.value)} placeholder="Ej. Número de confirmación..." />
       </div>
     </BaseWindow>
   );

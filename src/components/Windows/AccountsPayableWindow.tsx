@@ -5,12 +5,13 @@ import React, { useState } from 'react';
 import { usePOS } from '../POSContext';
 import BaseWindow from './BaseWindow';
 import { fmt } from '@/lib/posLogic';
+import { Method } from '@/lib/types';
 
 export default function AccountsPayableWindow() {
   const { state, setState, activeWindow, closeWindow, toast } = usePOS();
   const [abonoModal, setAbonoModal] = useState<{ open: boolean; facturaId: number | null }>({ open: false, facturaId: null });
   const [montoAbono, setMontoAbono] = useState('');
-  const [metodoPago, setMetodoPago] = useState('efectivo' as any);
+  const [metodoPago, setMetodoPago] = useState<Method>('efectivo_bs');
 
   const deudas = state.compras.filter(i => i.saldoPendiente > 0);
   const totalDeuda = deudas.reduce((s, i) => s + i.saldoPendiente, 0);
@@ -118,10 +119,14 @@ export default function AccountsPayableWindow() {
             </div>
             <div className="form-group">
               <label className="form-label">Método</label>
-              <select className="form-select" value={metodoPago} onChange={e => setMetodoPago(e.target.value as any)}>
-                <option value="efectivo">Efectivo</option>
+              <select className="form-select" value={metodoPago} onChange={e => setMetodoPago(e.target.value as Method)}>
+                <option value="efectivo_bs">Efectivo Bs.</option>
+                <option value="pago_movil">Pago Móvil</option>
+                <option value="biopago">BioPago</option>
                 <option value="transferencia">Transferencia</option>
-                <option value="punto_venta">Punto de Venta</option>
+                <option value="efectivo_usd">Efectivo USD</option>
+                <option value="tarjeta">Tarjeta</option>
+                <option value="zelle">Zelle</option>
               </select>
             </div>
             <div style={{ display: 'flex', gap: '8px', marginTop: '20px' }}>
