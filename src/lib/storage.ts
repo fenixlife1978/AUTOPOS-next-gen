@@ -24,7 +24,6 @@ export const DEFAULT_STATE: AppState = {
   ventas: [],
   compras: [],
   abonos: [],
-  cuentas: [],
   carrito: [],
   clienteActual: '',
   storageMode: 'hybrid',
@@ -33,8 +32,7 @@ export const DEFAULT_STATE: AppState = {
   nextProvId: 3,
   nextVentaId: 1,
   nextCompraId: 1,
-  nextAbonoId: 1,
-  nextCuentaId: 1
+  nextAbonoId: 1
 };
 
 export function saveState(state: AppState) {

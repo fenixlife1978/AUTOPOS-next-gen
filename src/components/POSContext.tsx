@@ -2,7 +2,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { AppState, Product, Client, Supplier, Sale, Account, CartItem, Category, Method, PurchaseInvoice, PurchasePayment } from '@/lib/types';
+import { AppState, Product, Client, Supplier, Sale, CartItem, Category, Method, PurchaseInvoice, PurchasePayment } from '@/lib/types';
 import { loadState, saveState, DEFAULT_STATE } from '@/lib/storage';
 import { fechaStr, horaStr, fechaISO } from '@/lib/posLogic';
 
@@ -34,8 +34,6 @@ interface POSContextType {
   setCurrentSaleForTicket: (s: Sale | null) => void;
   accountFiltroTipo: 'cobrar' | 'pagar';
   setAccountFiltroTipo: (t: 'cobrar' | 'pagar') => void;
-  editingAccount: Account | null;
-  setEditingAccount: (a: Account | null) => void;
   
   // Mobile
   isCartMobileOpen: boolean;
@@ -57,7 +55,6 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
   const [editingInvoice, setEditingInvoice] = useState<PurchaseInvoice | null>(null);
   const [currentSaleForTicket, setCurrentSaleForTicket] = useState<Sale | null>(null);
   const [accountFiltroTipo, setAccountFiltroTipo] = useState<'cobrar' | 'pagar'>('cobrar');
-  const [editingAccount, setEditingAccount] = useState<Account | null>(null);
   
   const [isCartMobileOpen, setIsCartMobileOpen] = useState(false);
   const [mobileTab, setMobileTab] = useState('productos');
@@ -163,7 +160,6 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
       editingInvoice, setEditingInvoice,
       currentSaleForTicket, setCurrentSaleForTicket,
       accountFiltroTipo, setAccountFiltroTipo,
-      editingAccount, setEditingAccount,
       isCartMobileOpen, setIsCartMobileOpen,
       mobileTab, setMobileTab
     }}>
