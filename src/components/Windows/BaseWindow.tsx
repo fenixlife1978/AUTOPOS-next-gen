@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
 
 interface Props {
   id: string;
@@ -15,68 +15,24 @@ interface Props {
 }
 
 export default function BaseWindow({ id, title, icon, width = '440px', children, footer, isOpen, onClose }: Props) {
-  const [position, setPosition] = useState<{ x: string, y: string }>({ x: '50%', y: '80px' });
-  const [isDragging, setIsDragging] = useState(false);
-  const offsetRef = useRef({ x: 0, y: 0 });
   const windowRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isDragging) return;
-      
-      const newX = e.clientX - offsetRef.current.x;
-      const newY = e.clientY - offsetRef.current.y;
-      
-      setPosition({
-        x: `${newX}px`,
-        y: `${newY}px`
-      });
-    };
-
-    const handleMouseUp = () => {
-      setIsDragging(false);
-    };
-
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-    }
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isDragging, isOpen]);
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest('.win-btn')) return;
-    
-    setIsDragging(true);
-    if (windowRef.current) {
-      const rect = windowRef.current.getBoundingClientRect();
-      offsetRef.current = {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
-      };
-    }
-  };
-
-  // Conditional return must be after all hook declarations
   if (!isOpen) return null;
 
   const style: React.CSSProperties = {
     display: 'flex',
     width: width,
-    top: position.y,
-    left: position.x,
-    transform: position.x === '50%' ? 'translateX(-50%)' : 'none'
+    maxWidth: '95vw',
+    maxHeight: '90vh',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    position: 'fixed',
   };
 
   return (
     <div id={`win-${id}`} className="app-window" style={style} ref={windowRef}>
-      <div className="win-titlebar" onMouseDown={handleMouseDown}>
+      <div className="win-titlebar">
         <i className={`fas ${icon}`}></i>
         <span>{title}</span>
         <button className="win-btn close" onClick={onClose} aria-label="Cerrar">

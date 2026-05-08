@@ -608,11 +608,11 @@ h1, h2, h3, h4, h5 {
 @keyframes winOpen {
   from {
     opacity: 0;
-    transform: scale(.95)
+    transform: translate(-50%, -48%) scale(.95);
   }
   to {
     opacity: 1;
-    transform: scale(1)
+    transform: translate(-50%, -50%) scale(1);
   }
 }
 
@@ -623,7 +623,6 @@ h1, h2, h3, h4, h5 {
   align-items: center;
   padding: 0 10px;
   gap: 8px;
-  cursor: move;
   flex-shrink: 0;
 }
 
@@ -1079,8 +1078,8 @@ h1, h2, h3, h4, h5 {
     display: flex;
   }
   .app-window {
-    left: 4px !important;
-    right: 4px !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
     width: auto !important;
     max-width: calc(100vw - 8px) !important;
   }
