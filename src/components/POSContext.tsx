@@ -36,11 +36,15 @@ interface POSContextType {
   addCuenta: (cuenta: Omit<CuentaContable, 'id' | 'nivel' | 'codigo'>) => void;
   deleteCuenta: (id: string) => void;
   closeMonth: (yearMonth: string) => Promise<void>;
+  reopenMonth: (yearMonth: string) => Promise<void>;
   
   // Invoices & Abonos
   registrarFactura: (data: Partial<PurchaseInvoice>) => void;
   registrarAbono: (data: { facturaId: number; montoOriginal: number; monedaAbono: Moneda; metodo: Method; tasa?: number }) => void;
   getTasaActual: (moneda: Moneda) => number;
+  
+  // Categories
+  addCustomCategory: (name: string) => void;
   
   // Window specific
   editingProduct: Product | null;
@@ -101,10 +105,19 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
     }, 3000);
   }, []);
 
+  const addCustomCategory = (name: string) => {
+    if (state.customCategories.includes(name)) return;
+    setState(prev => ({
+      ...prev,
+      customCategories: [...prev.customCategories, name]
+    }));
+    toast(`Categoría "${name}" añadida`, 'success');
+  };
+
   const getTasaActual = useCallback((moneda: Moneda) => {
     if (moneda === 'VES') return 1;
     const t = [...state.tasas].reverse().find(t => t.monedaOrigen === moneda);
-    return t ? t.tasa : 45; // Default fallback rate
+    return t ? t.tasa : 45;
   }, [state.tasas]);
 
   const addAccountingEntry = async (entry: Omit<AsientoContable, 'id' | 'created_at'>) => {
@@ -136,8 +149,6 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addCuenta = (cuentaData: Omit<CuentaContable, 'id' | 'nivel' | 'codigo'>) => {
-    const { firestore } = initializeFirebase();
-    // Logic for automatic correlative code
     const baseCodeMap: Record<string, string> = {
       'ACTIVO CORRIENTE': '1.1',
       'ACTIVO NO CORRIENTE': '1.2',
@@ -179,11 +190,18 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
   };
 
   const closeMonth = async (yearMonth: string) => {
-    // Generate a closing entry for the month
     toast(`Mes ${yearMonth} cerrado con éxito`, 'success');
     setState(prev => ({
       ...prev,
       cuentas: prev.cuentas.map(c => ({ ...c, mesCerrado: yearMonth }))
+    }));
+  };
+
+  const reopenMonth = async (yearMonth: string) => {
+    toast(`Mes ${yearMonth} reabierto para correcciones`, 'info');
+    setState(prev => ({
+      ...prev,
+      cuentas: prev.cuentas.map(c => c.mesCerrado === yearMonth ? { ...c, mesCerrado: undefined } : c)
     }));
   };
 
@@ -196,7 +214,6 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
       });
       const saleWithId = { ...sale, id: saleRef.id };
 
-      // Automatic Accounting Entry for Sales
       await addAccountingEntry({
         fecha: new Date(),
         descripcion: `Venta POS #${saleWithId.id.substring(0, 5)} - ${sale.cliente?.nombre || 'General'}`,
@@ -370,8 +387,9 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
       toast, toasts,
       addToCart, updateCartQty, removeFromCart, clearCart,
       processSale, deleteSale,
-      addAccountingEntry, deleteAccountingEntry, addCuenta, deleteCuenta, closeMonth,
+      addAccountingEntry, deleteAccountingEntry, addCuenta, deleteCuenta, closeMonth, reopenMonth,
       registrarFactura, registrarAbono, getTasaActual,
+      addCustomCategory,
       editingProduct, setEditingProduct,
       editingClient, setEditingClient,
       editingSupplier, setEditingSupplier,

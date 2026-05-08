@@ -1,5 +1,5 @@
 
-export type Category = 'lubricante' | 'repuesto' | 'servicio' | 'general' | 'todos';
+export type Category = 'lubricante' | 'repuesto' | 'servicio' | 'general' | 'todos' | string;
 export type Method = 'efectivo_bs' | 'pago_movil' | 'biopago' | 'transferencia' | 'efectivo_usd' | 'tarjeta' | 'zelle' | 'cheque';
 export type AccountStatus = 'PENDIENTE' | 'PARCIAL' | 'COBRADO' | 'VENCIDO' | 'CASTIGADO';
 export type FacturaTipo = 'FISCAL_SENIAT' | 'NOTA_ENTREGA';
@@ -47,7 +47,7 @@ export interface Client {
 export interface Product {
   id: number;
   nombre: string;
-  categoria: 'lubricante' | 'repuesto' | 'servicio';
+  categoria: string;
   codigo: string;
   precio: number;
   costo: number;
@@ -57,6 +57,7 @@ export interface Product {
   unidad: string;
   desc?: string;
   icon?: string;
+  marca?: string;
 }
 
 export interface CartItem {
@@ -97,7 +98,7 @@ export interface Supplier {
   telefono?: string;
   email?: string;
   direccion?: string;
-  categoria: 'lubricante' | 'repuesto' | 'general';
+  categoria: string;
   notas?: string;
 }
 
@@ -174,6 +175,7 @@ export interface AppState {
   tasas: TasaCambio[];
   cuentas: CuentaContable[];
   carrito: CartItem[];
+  customCategories: string[];
   clienteActual: number | '';
   nextProdId: number;
   nextCliId: number;

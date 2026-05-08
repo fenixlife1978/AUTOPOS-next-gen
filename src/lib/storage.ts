@@ -1,12 +1,11 @@
 
 import { AppState, Product, Client, Supplier, CuentaContable, TasaCambio } from './types';
 
-export const STORAGE_KEY = 'autopos_v5_pro_accounting';
+export const STORAGE_KEY = 'autopos_v6_pro_full';
 
 export const PRODUCTOS_INICIALES: Product[] = [
-  {id:1,nombre:'Aceite Sintético 5W-30 1L',categoria:'lubricante',codigo:'LUB-001',precio:285,costo:180,porcentajeGanancia:0,porcentajeIVA:16,stock:24,unidad:'litro',desc:'Aceite motor sintético de alta performance',icon:'fa-bottle-droplet'},
-  {id:10,nombre:'Filtro de Aceite Universal',categoria:'repuesto',codigo:'REP-001',precio:85,costo:35,porcentajeGanancia:0,porcentajeIVA:16,stock:40,unidad:'pieza',desc:'Filtro de aceite compatible con múltiples modelos',icon:'fa-filter'},
-  {id:25,nombre:'Cambio de Aceite y Filtro',categoria:'servicio',codigo:'SER-001',precio:150,costo:0,porcentajeGanancia:0,porcentajeIVA:16,stock:999,unidad:'servicio',desc:'Incluye aceite y filtro',icon:'fa-wrench'}
+  {id:1,nombre:'Aceite Sintético 5W-30 PDV',categoria:'lubricante',codigo:'LUB-001',precio:285,costo:180,porcentajeGanancia:0,porcentajeIVA:16,stock:24,unidad:'litro',desc:'Aceite motor sintético premium nacional',icon:'fa-bottle-droplet',marca:'PDV'},
+  {id:10,nombre:'Filtro de Aceite Bosch 7401',categoria:'repuesto',codigo:'REP-001',precio:85,costo:35,porcentajeGanancia:0,porcentajeIVA:16,stock:40,unidad:'pieza',desc:'Filtro de alta eficiencia para motores modernos',icon:'fa-filter',marca:'Bosch'}
 ];
 
 export const CLIENTES_INICIALES: Client[] = [
@@ -17,7 +16,6 @@ export const PROVEEDORES_INICIALES: Supplier[] = [
   {id:1,nombre:'Distribuidora Nacional de Aceites SA',rif:'J-12345678-9',contacto:'Juan Pérez',telefono:'555-800-1000',email:'ventas@dna.com',direccion:'Zona Industrial #200',categoria:'lubricante',notas:'Entrega los martes'}
 ];
 
-// Start with a clean but structured minimal chart of accounts
 export const CUENTAS_INICIALES: CuentaContable[] = [
   { id: 'root-1', codigo: '1.1.01.01', nombre: 'Caja Principal', tipo: 'ACTIVO CORRIENTE', nivel: 4, saldoInicial: 0, monedaSaldoInicial: 'VES', editable: false },
   { id: 'root-2', codigo: '2.1.02.01', nombre: 'Débito Fiscal IVA', tipo: 'PASIVO CORRIENTE', nivel: 4, saldoInicial: 0, monedaSaldoInicial: 'VES', editable: false },
@@ -39,6 +37,7 @@ export const DEFAULT_STATE: AppState = {
   tasas: TASAS_INICIALES,
   cuentas: CUENTAS_INICIALES,
   carrito: [],
+  customCategories: [],
   clienteActual: '',
   nextProdId: 37,
   nextCliId: 3,
