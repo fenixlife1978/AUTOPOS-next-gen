@@ -3,6 +3,16 @@ export type Category = 'lubricante' | 'repuesto' | 'servicio' | 'general' | 'tod
 export type Method = 'efectivo_bs' | 'pago_movil' | 'biopago' | 'transferencia' | 'efectivo_usd' | 'tarjeta' | 'zelle';
 export type AccountStatus = 'pendiente' | 'pagada' | 'vencida' | 'parcial';
 export type FacturaTipo = 'FISCAL_SENIAT' | 'NOTA_ENTREGA';
+export type Moneda = 'VES' | 'USD' | 'EUR';
+
+export interface TasaCambio {
+  id: number;
+  moneda_origen: Moneda;
+  moneda_destino: Moneda;
+  tasa: number;
+  fecha: string;
+  fuente: 'BCV' | 'PARALELO' | 'MANUAL';
+}
 
 export interface Product {
   id: number;
@@ -75,13 +85,22 @@ export interface PurchaseInvoice {
   numeroFactura: string;
   fechaEmision: string;
   fechaVencimiento?: string;
-  montoDolares?: number;
-  montoBolivares: number;
-  tasaBCV?: number;
+  
+  // Multimoneda
+  moneda_original: Moneda;
+  monto_original: number;
+  monto_bolivares: number;
+  tasa_cambio_usada: number;
+  tasa_fuente: string;
+
   tipoFactura: FacturaTipo;
   estadoPago: AccountStatus;
-  totalPagado: number;
-  saldoPendiente: number;
+  
+  total_pagado_original: number;
+  saldo_pendiente_original: number;
+  total_pagado_ves: number;
+  saldo_pendiente_ves: number;
+  
   imagenUrl?: string;
   created_at: string;
 }
@@ -89,10 +108,26 @@ export interface PurchaseInvoice {
 export interface PurchasePayment {
   id: string;
   facturaId: number;
-  montoBolivares: number;
+  moneda_abono: Moneda;
+  monto_original: number;
+  monto_bolivares: number;
+  tasa_cambio_aplicada: number;
   fechaAbono: string;
   metodoPago: Method;
   referencia?: string;
+}
+
+export interface AsientoContable {
+  id: number;
+  fecha: string;
+  concepto: string;
+  referenciaId: string | number;
+  tipo: 'COMPRA' | 'ABONO' | 'VENTA';
+  lineas: {
+    cuenta: string;
+    debe: number;
+    haber: number;
+  }[];
 }
 
 export interface AppState {
@@ -102,6 +137,8 @@ export interface AppState {
   ventas: Sale[];
   compras: PurchaseInvoice[];
   abonos: PurchasePayment[];
+  asientos: AsientoContable[];
+  tasas: TasaCambio[];
   carrito: { prodId: number; cantidad: number }[];
   clienteActual: number | '';
   storageMode: 'local' | 'hybrid' | 'cloud';
@@ -111,4 +148,6 @@ export interface AppState {
   nextVentaId: number;
   nextCompraId: number;
   nextAbonoId: number;
+  nextAsientoId: number;
+  nextTasaId: number;
 }

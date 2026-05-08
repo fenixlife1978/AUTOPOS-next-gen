@@ -5,67 +5,68 @@ import React, { useState, useEffect } from 'react';
 import { usePOS } from '../POSContext';
 import BaseWindow from './BaseWindow';
 import Image from 'next/image';
+import { Moneda } from '@/lib/types';
 
 export default function AddInvoiceWindow() {
-  const { state, setState, activeWindow, closeWindow, toast } = usePOS();
+  const { state, registrarFactura, activeWindow, closeWindow, toast, getTasaActual } = usePOS();
   
   const [formData, setFormData] = useState({
     proveedorId: '',
     numeroFactura: '',
     fechaEmision: new Date().toISOString().split('T')[0],
     fechaVencimiento: '',
-    montoDolares: '',
-    montoBolivares: '',
-    tasaBCV: '40.00',
+    moneda_original: 'USD' as Moneda,
+    monto_original: '',
+    tasa_cambio: '',
+    tasa_fuente: 'BCV',
     tipoFactura: 'FISCAL_SENIAT' as any,
     esCredito: false
   });
 
   const [imagenPreview, setImagenPreview] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (formData.moneda_original !== 'VES') {
+      const t = getTasaActual(formData.moneda_original);
+      setFormData(prev => ({ ...prev, tasa_cambio: t.toString() }));
+    } else {
+      setFormData(prev => ({ ...prev, tasa_cambio: '1' }));
+    }
+  }, [formData.moneda_original, getTasaActual]);
+
   const handleImagenChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && (file.type === 'image/jpeg' || file.type === 'image/png')) {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagenPreview(reader.result as string);
-      };
+      reader.onloadend = () => setImagenPreview(reader.result as string);
       reader.readAsDataURL(file);
     }
   };
 
   const handleSave = () => {
-    if (!formData.proveedorId || !formData.numeroFactura || !formData.montoBolivares) {
-      toast('Proveedor, factura y monto obligatorios', 'error');
+    if (!formData.proveedorId || !formData.numeroFactura || !formData.monto_original) {
+      toast('Campos obligatorios incompletos', 'error');
       return;
     }
 
-    const montoBs = parseFloat(formData.montoBolivares);
-    
-    const newInvoice = {
-      id: state.nextCompraId,
+    const montoOrig = parseFloat(formData.monto_original);
+    const tasa = parseFloat(formData.tasa_cambio) || 1;
+    const montoVES = montoOrig * tasa;
+
+    registrarFactura({
       proveedorId: parseInt(formData.proveedorId),
       numeroFactura: formData.numeroFactura,
       fechaEmision: formData.fechaEmision,
       fechaVencimiento: formData.esCredito ? formData.fechaVencimiento : undefined,
-      montoDolares: formData.montoDolares ? parseFloat(formData.montoDolares) : undefined,
-      montoBolivares: montoBs,
-      tasaBCV: formData.tasaBCV ? parseFloat(formData.tasaBCV) : undefined,
+      moneda_original: formData.moneda_original,
+      monto_original: montoOrig,
+      monto_bolivares: montoVES,
+      tasa_cambio_usada: tasa,
+      tasa_fuente: formData.tasa_fuente,
       tipoFactura: formData.tipoFactura,
-      estadoPago: formData.esCredito ? 'pendiente' : 'pagada',
-      totalPagado: formData.esCredito ? 0 : montoBs,
-      saldoPendiente: formData.esCredito ? montoBs : 0,
-      imagenUrl: imagenPreview || undefined,
-      created_at: new Date().toISOString()
-    };
+      imagenUrl: imagenPreview || undefined
+    });
 
-    setState(prev => ({
-      ...prev,
-      compras: [...prev.compras, newInvoice as any],
-      nextCompraId: prev.nextCompraId + 1
-    }));
-
-    toast('Factura registrada', 'success');
     closeWindow();
   };
 
@@ -105,33 +106,33 @@ export default function AddInvoiceWindow() {
         </div>
       </div>
 
-      <div className="form-group">
-        <label className="form-label">Tipo de Factura</label>
-        <select className="form-select" value={formData.tipoFactura} onChange={e => setFormData({...formData, tipoFactura: e.target.value as any})}>
-          <option value="FISCAL_SENIAT">Fiscal SENIAT (Apta contabilidad)</option>
-          <option value="NOTA_ENTREGA">Nota de Entrega (No fiscal)</option>
-        </select>
-      </div>
-
-      <div style={{ background: 'var(--bg)', padding: '12px', borderRadius: '8px', marginBottom: '12px', border: '1px solid var(--border)' }}>
+      <div style={{ background: 'var(--bg)', padding: '15px', borderRadius: '10px', marginBottom: '15px', border: '1px solid var(--border)' }}>
         <div className="form-row">
           <div className="form-group">
-            <label className="form-label">Monto USD (opcional)</label>
-            <input type="number" className="form-input" value={formData.montoDolares} onChange={e => {
-              const val = e.target.value;
-              const bs = parseFloat(val) * parseFloat(formData.tasaBCV || '0');
-              setFormData({...formData, montoDolares: val, montoBolivares: isNaN(bs) ? '' : bs.toFixed(2)});
-            }} />
+            <label className="form-label">Moneda</label>
+            <select className="form-select" value={formData.moneda_original} onChange={e => setFormData({...formData, moneda_original: e.target.value as Moneda})}>
+              <option value="VES">Bolívares (VES)</option>
+              <option value="USD">Dólares (USD)</option>
+              <option value="EUR">Euros (EUR)</option>
+            </select>
           </div>
           <div className="form-group">
-            <label className="form-label">Tasa BCV</label>
-            <input type="number" className="form-input" value={formData.tasaBCV} onChange={e => setFormData({...formData, tasaBCV: e.target.value})} />
+            <label className="form-label">Monto Original</label>
+            <input type="number" className="form-input" value={formData.monto_original} onChange={e => setFormData({...formData, monto_original: e.target.value})} style={{ fontWeight: 700, color: 'var(--accent)' }} />
           </div>
         </div>
-        <div className="form-group">
-          <label className="form-label">Total en Bolívares *</label>
-          <input type="number" className="form-input" value={formData.montoBolivares} onChange={e => setFormData({...formData, montoBolivares: e.target.value})} style={{ background: 'var(--bg2)', fontWeight: 700, color: 'var(--accent)' }} />
-        </div>
+        {formData.moneda_original !== 'VES' && (
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Tasa de Cambio</label>
+              <input type="number" className="form-input" value={formData.tasa_cambio} onChange={e => setFormData({...formData, tasa_cambio: e.target.value, tasa_fuente: 'MANUAL'})} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Fuente</label>
+              <input type="text" className="form-input" value={formData.tasa_fuente} readOnly style={{ background: 'transparent', border: 'none' }} />
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="form-group">
@@ -152,7 +153,7 @@ export default function AddInvoiceWindow() {
         <label className="form-label">Imagen de la Factura (JPG/PNG)</label>
         <input type="file" className="form-input" accept="image/*" onChange={handleImagenChange} />
         {imagenPreview && (
-          <div className="mt-2" style={{ position: 'relative', height: '150px', width: '100%', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border)' }}>
+          <div className="mt-2" style={{ position: 'relative', height: '120px', width: '100%', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border)' }}>
             <Image src={imagenPreview} alt="Preview" fill style={{ objectFit: 'contain' }} />
           </div>
         )}

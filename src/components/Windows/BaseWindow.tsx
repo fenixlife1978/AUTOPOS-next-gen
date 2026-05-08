@@ -36,28 +36,64 @@ export default function BaseWindow({ id, title, icon, width = '440px', children,
     left: '50%',
     transform: 'translate(-50%, -50%)',
     zIndex: 5001,
+    background: 'var(--bg2)',
+    border: '1px solid var(--border)',
+    borderRadius: '12px',
+    boxShadow: '0 25px 70px rgba(0,0,0,0.8)',
+    overflow: 'hidden'
   };
 
   return (
-    <div className="window-overlay show" onClick={onClose} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div 
+      className="window-overlay show" 
+      onClick={onClose} 
+      style={{ 
+        position: 'fixed', 
+        inset: 0, 
+        background: 'rgba(0,0,0,0.6)', 
+        backdropFilter: 'blur(3px)',
+        zIndex: 5000,
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center' 
+      }}
+    >
       <div 
         id={`win-${id}`} 
-        className="app-window" 
         style={style} 
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="win-titlebar" style={{ cursor: 'default' }}>
-          <i className={`fas ${icon}`}></i>
-          <span>{title}</span>
-          <button className="win-btn close" onClick={onClose} aria-label="Cerrar">
+        <div className="win-titlebar" style={{ 
+          height: '40px', 
+          background: 'var(--bg3)', 
+          display: 'flex', 
+          alignItems: 'center', 
+          padding: '0 12px', 
+          gap: '10px',
+          borderBottom: '1px solid var(--border)',
+          cursor: 'default',
+          flexShrink: 0
+        }}>
+          <i className={`fas ${icon}`} style={{ color: 'var(--accent)' }}></i>
+          <span style={{ flex: 1, fontSize: '14px', fontWeight: 600, fontFamily: 'Space Grotesk' }}>{title}</span>
+          <button className="win-btn close" onClick={onClose} style={{ 
+            width: '24px', height: '24px', border: 'none', background: 'transparent', color: 'var(--muted)', cursor: 'pointer' 
+          }}>
             <i className="fas fa-xmark"></i>
           </button>
         </div>
-        <div className="win-body" style={{ overflowY: 'auto', flex: 1 }}>
+        <div className="win-body" style={{ overflowY: 'auto', flex: 1, padding: '20px' }}>
           {children}
         </div>
         {footer && (
-          <div className="win-footer">
+          <div className="win-footer" style={{ 
+            padding: '12px 20px', 
+            borderTop: '1px solid var(--border)', 
+            display: 'flex', 
+            justifyContent: 'flex-end', 
+            gap: '10px',
+            flexShrink: 0 
+          }}>
             {footer}
           </div>
         )}

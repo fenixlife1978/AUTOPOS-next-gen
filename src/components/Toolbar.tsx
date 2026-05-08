@@ -15,8 +15,8 @@ export default function Toolbar() {
       <div className="tool-btn" onClick={() => openWindow('clientes')} title="F7"><i className="fas fa-users"></i>Clientes</div>
       <div className="tool-btn" onClick={() => openWindow('proveedores')}><i className="fas fa-truck"></i>Proveedores</div>
       <div className="tool-sep"></div>
-      <div className="tool-btn" onClick={() => { setAccountFiltroTipo('cobrar'); openWindow('cuentas'); }}><i className="fas fa-hand-holding-dollar"></i>CxC</div>
-      <div className="tool-btn" onClick={() => { setAccountFiltroTipo('pagar'); openWindow('cuentas'); }}><i className="fas fa-money-bill-transfer"></i>CxP</div>
+      <div className="tool-btn" onClick={() => { setAccountFiltroTipo('pagar'); openWindow('cuentas'); }}><i className="fas fa-hand-holding-dollar"></i>CxP</div>
+      <div className="tool-btn" onClick={() => openWindow('contabilidad')}><i className="fas fa-book"></i>Libro Diario</div>
       <div className="tool-btn" onClick={() => openWindow('reportes')}><i className="fas fa-chart-bar"></i>Reportes</div>
       <div style={{ flex: 1 }}></div>
       <div style={{ fontSize: '12px', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
