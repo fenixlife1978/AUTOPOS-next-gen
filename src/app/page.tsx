@@ -26,9 +26,10 @@ import AddInvoiceWindow from '@/components/Windows/AddInvoiceWindow';
 import AccountsPayableWindow from '@/components/Windows/AccountsPayableWindow';
 import CollectionsWindow from '@/components/Windows/CollectionsWindow';
 import AccountingWindow from '@/components/Windows/AccountingWindow';
+import CajaWindow from '@/components/Windows/CajaWindow';
 
 function MainLayout() {
-  const { clearCart, openWindow, closeWindow, activeWindow, setIsCartMobileOpen, mobileTab, setMobileTab } = usePOS();
+  const { clearCart, openWindow, closeWindow, activeWindow, setIsCartMobileOpen, mobileTab, setMobileTab, state } = usePOS();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -98,6 +99,7 @@ function MainLayout() {
       <AccountsPayableWindow />
       <CollectionsWindow />
       <AccountingWindow />
+      <CajaWindow />
     </>
   );
 }

@@ -4,11 +4,11 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { 
   AppState, Product, Client, Supplier, Sale, CartItem, Category, Method, 
-  PurchaseInvoice, PurchasePayment, AsientoContable, TasaCambio, Moneda, CuentaContable
+  PurchaseInvoice, PurchasePayment, AsientoContable, TasaCambio, Moneda, CuentaContable, BoxSession
 } from '@/lib/types';
 import { loadState, saveState, DEFAULT_STATE } from '@/lib/storage';
 import { fechaStr, horaStr } from '@/lib/posLogic';
-import { collection, addDoc, deleteDoc, doc, getDocs, query, orderBy, serverTimestamp, setDoc, Timestamp } from 'firebase/firestore';
+import { collection, addDoc, deleteDoc, doc, updateDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { initializeFirebase } from '@/firebase';
 
 interface POSContextType {
@@ -34,9 +34,14 @@ interface POSContextType {
   addAccountingEntry: (entry: Omit<AsientoContable, 'id' | 'created_at'>) => Promise<void>;
   deleteAccountingEntry: (entryId: string) => Promise<void>;
   addCuenta: (cuenta: Omit<CuentaContable, 'id' | 'nivel' | 'codigo'>) => void;
+  updateCuenta: (id: string, data: Partial<CuentaContable>) => void;
   deleteCuenta: (id: string) => void;
   closeMonth: (yearMonth: string) => Promise<void>;
   reopenMonth: (yearMonth: string) => Promise<void>;
+  
+  // Cash Box
+  openBox: (monto: number) => void;
+  closeBox: () => void;
   
   // Invoices & Abonos
   registrarFactura: (data: Partial<PurchaseInvoice>) => void;
@@ -55,6 +60,8 @@ interface POSContextType {
   setEditingSupplier: (s: Supplier | null) => void;
   editingInvoice: PurchaseInvoice | null;
   setEditingInvoice: (i: PurchaseInvoice | null) => void;
+  editingCuenta: CuentaContable | null;
+  setEditingCuenta: (acc: CuentaContable | null) => void;
   currentSaleForTicket: Sale | null;
   setCurrentSaleForTicket: (s: Sale | null) => void;
   accountFiltroTipo: 'cobrar' | 'pagar';
@@ -78,6 +85,7 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
   const [editingInvoice, setEditingInvoice] = useState<PurchaseInvoice | null>(null);
+  const [editingCuenta, setEditingCuenta] = useState<CuentaContable | null>(null);
   const [currentSaleForTicket, setCurrentSaleForTicket] = useState<Sale | null>(null);
   const [accountFiltroTipo, setAccountFiltroTipo] = useState<'cobrar' | 'pagar'>('pagar');
   
@@ -105,47 +113,21 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
     }, 3000);
   }, []);
 
-  const addCustomCategory = (name: string) => {
-    if (state.customCategories.includes(name)) return;
-    setState(prev => ({
-      ...prev,
-      customCategories: [...prev.customCategories, name]
-    }));
-    toast(`Categoría "${name}" añadida`, 'success');
+  const openBox = (monto: number) => {
+    const newSession: BoxSession = {
+      id: Math.random().toString(36).substring(7),
+      fechaApertura: new Date().toISOString(),
+      montoAperturaVES: monto,
+      vendedor: 'Administrador',
+      estado: 'abierta'
+    };
+    setState(prev => ({ ...prev, boxSession: newSession }));
+    toast('Caja abierta correctamente', 'success');
   };
 
-  const getTasaActual = useCallback((moneda: Moneda) => {
-    if (moneda === 'VES') return 1;
-    const t = [...state.tasas].reverse().find(t => t.monedaOrigen === moneda);
-    return t ? t.tasa : 45;
-  }, [state.tasas]);
-
-  const addAccountingEntry = async (entry: Omit<AsientoContable, 'id' | 'created_at'>) => {
-    try {
-      const { firestore } = initializeFirebase();
-      const docRef = await addDoc(collection(firestore, 'asientos_contables'), {
-        ...entry,
-        created_at: serverTimestamp(),
-        fecha: Timestamp.fromDate(new Date(entry.fecha))
-      });
-      const newEntry = { ...entry, id: docRef.id, created_at: new Date() };
-      setState(prev => ({ ...prev, asientos: [newEntry, ...prev.asientos] }));
-    } catch (e) {
-      console.error(e);
-      toast('Error al guardar asiento', 'error');
-    }
-  };
-
-  const deleteAccountingEntry = async (entryId: string) => {
-    try {
-      const { firestore } = initializeFirebase();
-      await deleteDoc(doc(firestore, 'asientos_contables', entryId));
-      setState(prev => ({ ...prev, asientos: prev.asientos.filter(a => a.id !== entryId) }));
-      toast('Asiento eliminado', 'info');
-    } catch (e) {
-      console.error(e);
-      toast('Error al eliminar asiento', 'error');
-    }
+  const closeBox = () => {
+    setState(prev => ({ ...prev, boxSession: { ...prev.boxSession!, estado: 'cerrada', fechaCierre: new Date().toISOString() } }));
+    // No reseteamos inmediatamente para que el componente CajaWindow pueda mostrar el reporte final antes de que el usuario lo cierre
   };
 
   const addCuenta = (cuentaData: Omit<CuentaContable, 'id' | 'nivel' | 'codigo'>) => {
@@ -184,7 +166,16 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
     toast(`Cuenta ${finalCode} creada`, 'success');
   };
 
+  const updateCuenta = (id: string, data: Partial<CuentaContable>) => {
+    setState(prev => ({
+      ...prev,
+      cuentas: prev.cuentas.map(c => c.id === id ? { ...c, ...data } : c)
+    }));
+    toast('Cuenta actualizada', 'success');
+  };
+
   const deleteCuenta = (id: string) => {
+    if (!confirm('¿Desea eliminar esta cuenta? Esta acción no se puede deshacer si tiene asientos vinculados.')) return;
     setState(prev => ({ ...prev, cuentas: prev.cuentas.filter(c => c.id !== id) }));
     toast('Cuenta eliminada', 'info');
   };
@@ -205,14 +196,44 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
     }));
   };
 
+  const addAccountingEntry = async (entry: Omit<AsientoContable, 'id' | 'created_at'>) => {
+    try {
+      const { firestore } = initializeFirebase();
+      const docRef = await addDoc(collection(firestore, 'asientos_contables'), {
+        ...entry,
+        created_at: serverTimestamp(),
+        fecha: Timestamp.fromDate(new Date(entry.fecha))
+      });
+      const newEntry = { ...entry, id: docRef.id, created_at: new Date() } as AsientoContable;
+      setState(prev => ({ ...prev, asientos: [newEntry, ...prev.asientos] }));
+    } catch (e) {
+      console.error(e);
+      toast('Error al guardar asiento', 'error');
+    }
+  };
+
+  const deleteAccountingEntry = async (entryId: string) => {
+    try {
+      const { firestore } = initializeFirebase();
+      await deleteDoc(doc(firestore, 'asientos_contables', entryId));
+      setState(prev => ({ ...prev, asientos: prev.asientos.filter(a => a.id !== entryId) }));
+      toast('Asiento eliminado', 'info');
+    } catch (e) {
+      console.error(e);
+      toast('Error al eliminar asiento', 'error');
+    }
+  };
+
   const processSale = async (sale: Sale) => {
     try {
       const { firestore } = initializeFirebase();
-      const saleRef = await addDoc(collection(firestore, 'ventas'), {
+      const saleData = {
         ...sale,
+        boxSessionId: state.boxSession?.id || null,
         created_at: serverTimestamp()
-      });
-      const saleWithId = { ...sale, id: saleRef.id };
+      };
+      const saleRef = await addDoc(collection(firestore, 'ventas'), saleData);
+      const saleWithId = { ...sale, id: saleRef.id, boxSessionId: state.boxSession?.id };
 
       await addAccountingEntry({
         fecha: new Date(),
@@ -254,6 +275,12 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
       toast('Error al eliminar venta', 'error');
     }
   };
+
+  const getTasaActual = useCallback((moneda: Moneda) => {
+    if (moneda === 'VES') return 1;
+    const t = [...state.tasas].reverse().find(t => t.monedaOrigen === moneda);
+    return t ? t.tasa : 45;
+  }, [state.tasas]);
 
   const registrarFactura = useCallback((data: Partial<PurchaseInvoice>) => {
     setState(prev => {
@@ -332,6 +359,10 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
   }, [getTasaActual, toast]);
 
   const addToCart = useCallback((prodId: number) => {
+    if (!state.boxSession || state.boxSession.estado === 'cerrada') {
+      toast('Debe abrir la caja primero', 'error');
+      return;
+    }
     const prod = state.productos.find(p => p.id === prodId);
     if (!prod) return;
     if (prod.categoria !== 'servicio' && prod.stock <= 0) {
@@ -350,7 +381,7 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
       return { ...prev, carrito: [...prev.carrito, { prodId, cantidad: 1 }] };
     });
     toast(prod.nombre + ' agregado', 'success');
-  }, [state.productos, toast]);
+  }, [state.productos, state.boxSession, toast]);
 
   const updateCartQty = useCallback((prodId: number, delta: number) => {
     setState(prev => {
@@ -380,6 +411,15 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
     toast('Carrito vaciado', 'info');
   }, [toast]);
 
+  const addCustomCategory = (name: string) => {
+    if (state.customCategories.includes(name)) return;
+    setState(prev => ({
+      ...prev,
+      customCategories: [...prev.customCategories, name]
+    }));
+    toast(`Categoría "${name}" añadida`, 'success');
+  };
+
   return (
     <POSContext.Provider value={{
       state, setState,
@@ -387,13 +427,15 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
       toast, toasts,
       addToCart, updateCartQty, removeFromCart, clearCart,
       processSale, deleteSale,
-      addAccountingEntry, deleteAccountingEntry, addCuenta, deleteCuenta, closeMonth, reopenMonth,
+      addAccountingEntry, deleteAccountingEntry, addCuenta, updateCuenta, deleteCuenta, closeMonth, reopenMonth,
+      openBox, closeBox,
       registrarFactura, registrarAbono, getTasaActual,
       addCustomCategory,
       editingProduct, setEditingProduct,
       editingClient, setEditingClient,
       editingSupplier, setEditingSupplier,
       editingInvoice, setEditingInvoice,
+      editingCuenta, setEditingCuenta,
       currentSaleForTicket, setCurrentSaleForTicket,
       accountFiltroTipo, setAccountFiltroTipo,
       isCartMobileOpen, setIsCartMobileOpen,

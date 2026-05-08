@@ -3,16 +3,22 @@
 
 import React from 'react';
 import { usePOS } from './POSContext';
-import { LayoutDashboard, Users, Truck, Wallet, FileText, BarChart3, BookOpen, Plus } from 'lucide-react';
+import { LayoutDashboard, Users, Truck, Wallet, FileText, BarChart3, BookOpen, Plus, Monitor } from 'lucide-react';
 
 export default function Toolbar() {
-  const { openWindow, clearCart, setAccountFiltroTipo } = usePOS();
+  const { openWindow, clearCart, setAccountFiltroTipo, state } = usePOS();
 
   return (
     <div className="toolbar">
       <div className="tool-btn active" onClick={clearCart} title="F2 - Limpiar carrito e iniciar una nueva venta desde cero">
         <Plus size={16} /> Nueva Venta
       </div>
+      <div className="tool-sep"></div>
+
+      <div className={`tool-btn ${state.boxSession ? 'text-success' : 'text-danger'}`} onClick={() => openWindow('caja')} title="Gestión de Caja: Abrir y Cerrar turno con reporte detallado">
+        <Monitor size={16} /> Caja {state.boxSession ? '(Abierta)' : '(Cerrada)'}
+      </div>
+      
       <div className="tool-sep"></div>
       
       <div className="tool-btn" onClick={() => openWindow('inventario')} title="F6 - Gestionar productos, servicios y control de stock real">

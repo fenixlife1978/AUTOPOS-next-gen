@@ -22,6 +22,15 @@ export type AccountType =
   | 'CUENTAS DE ORDEN' 
   | 'RESERVAS';
 
+export interface BoxSession {
+  id: string;
+  fechaApertura: string;
+  fechaCierre?: string;
+  montoAperturaVES: number;
+  vendedor: string;
+  estado: 'abierta' | 'cerrada';
+}
+
 export interface TasaCambio {
   id?: string;
   monedaOrigen: Moneda;
@@ -88,6 +97,7 @@ export interface Sale {
   recibido: number;
   cambio: number;
   nota?: string;
+  boxSessionId?: string;
 }
 
 export interface Supplier {
@@ -183,4 +193,5 @@ export interface AppState {
   nextAsientoId: number;
   nextTasaId: number;
   nextCompraId: number;
+  boxSession: BoxSession | null;
 }
