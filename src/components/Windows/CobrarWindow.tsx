@@ -60,14 +60,14 @@ export default function CobrarWindow() {
         return p;
       });
 
-      const cliObj = prev.clienteActual ? prev.clientes.find(c => c.id === prev.clienteActual) : null;
+      const cliObj = typeof prev.clienteActual === 'number' ? prev.clientes.find(c => c.id === prev.clienteActual) : null;
       const venta: Sale = {
         id: Math.random().toString(36).substring(2, 9),
         fecha: new Date().toISOString(),
         fechaStr: fechaStr(),
         horaStr: horaStr(),
         cliente: cliObj || null,
-        clienteId: prev.clienteActual || null,
+        clienteId: typeof prev.clienteActual === 'number' ? prev.clienteActual : null,
         items: cartItems.map(i => ({
           id: i!.id,
           nombre: i!.nombre,

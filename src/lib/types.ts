@@ -5,7 +5,7 @@ export type AccountStatus = 'pendiente' | 'pagada' | 'vencida' | 'parcial';
 export type FacturaTipo = 'FISCAL_SENIAT' | 'NOTA_ENTREGA';
 
 export interface Product {
-  id: string;
+  id: number;
   nombre: string;
   categoria: Category;
   codigo: string;
@@ -20,7 +20,7 @@ export interface Product {
 }
 
 export interface Client {
-  id: string;
+  id: number;
   nombre: string;
   telefono?: string;
   email?: string;
@@ -31,7 +31,7 @@ export interface Client {
 }
 
 export interface Supplier {
-  id: string;
+  id: number;
   nombre: string;
   rif?: string;
   contacto?: string;
@@ -43,7 +43,7 @@ export interface Supplier {
 }
 
 export interface SaleItem {
-  id: string;
+  id: number;
   nombre: string;
   cantidad: number;
   precio: number;
@@ -58,7 +58,7 @@ export interface Sale {
   fechaStr: string;
   horaStr: string;
   cliente: Client | null;
-  clienteId: string | null;
+  clienteId: number | null;
   items: SaleItem[];
   subtotal: number;
   iva: number;
@@ -70,8 +70,8 @@ export interface Sale {
 }
 
 export interface PurchaseInvoice {
-  id: string;
-  proveedorId: string;
+  id: number;
+  proveedorId: number;
   numeroFactura: string;
   fechaEmision: string;
   fechaVencimiento?: string;
@@ -82,12 +82,13 @@ export interface PurchaseInvoice {
   estadoPago: AccountStatus;
   totalPagado: number;
   saldoPendiente: number;
+  imagenUrl?: string;
   created_at: string;
 }
 
 export interface PurchasePayment {
   id: string;
-  facturaId: string;
+  facturaId: number;
   montoBolivares: number;
   fechaAbono: string;
   metodoPago: Method;
@@ -101,8 +102,13 @@ export interface AppState {
   ventas: Sale[];
   compras: PurchaseInvoice[];
   abonos: PurchasePayment[];
-  carrito: { prodId: string; cantidad: number }[];
-  clienteActual: string;
+  carrito: { prodId: number; cantidad: number }[];
+  clienteActual: number | '';
   storageMode: 'local' | 'hybrid' | 'cloud';
-  lastSync?: string;
+  nextProdId: number;
+  nextCliId: number;
+  nextProvId: number;
+  nextVentaId: number;
+  nextCompraId: number;
+  nextAbonoId: number;
 }

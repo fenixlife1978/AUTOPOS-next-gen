@@ -9,7 +9,7 @@ import { Method } from '@/lib/types';
 
 export default function AccountsPayableWindow() {
   const { state, setState, activeWindow, closeWindow, toast } = usePOS();
-  const [abonoModal, setAbonoModal] = useState<{ open: boolean; facturaId: string | null }>({ open: false, facturaId: null });
+  const [abonoModal, setAbonoModal] = useState<{ open: boolean; facturaId: number | null }>({ open: false, facturaId: null });
   const [montoAbono, setMontoAbono] = useState('');
   const [metodoPago, setMetodoPago] = useState<Method>('efectivo_bs');
 
@@ -17,7 +17,7 @@ export default function AccountsPayableWindow() {
   const totalDeuda = deudas.reduce((s, i) => s + i.saldoPendiente, 0);
 
   const registrarAbono = () => {
-    if (!abonoModal.facturaId || !montoAbono) return;
+    if (abonoModal.facturaId === null || !montoAbono) return;
     const monto = parseFloat(montoAbono);
     const factId = abonoModal.facturaId;
 
@@ -64,7 +64,7 @@ export default function AccountsPayableWindow() {
         <div style={{ fontSize: '32px', fontWeight: 800, fontFamily: 'Space Grotesk' }}>{fmt(totalDeuda)}</div>
       </div>
 
-      <div style={{ overflowY: 'auto', maxHeight: '400px' }}>
+      <div style={{ overflowY: 'auto' }}>
         {deudas.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px', color: 'var(--muted)' }}>No hay deudas pendientes</div>
         ) : (
