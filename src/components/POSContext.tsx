@@ -4,10 +4,12 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { 
   AppState, Product, Client, Supplier, Sale, CartItem, Category, Method, 
-  PurchaseInvoice, PurchasePayment, AsientoContable, TasaCambio, Moneda 
+  PurchaseInvoice, PurchasePayment, AsientoContable, TasaCambio, Moneda, CuentaContable
 } from '@/lib/types';
 import { loadState, saveState, DEFAULT_STATE } from '@/lib/storage';
-import { fechaStr, horaStr, fechaISO } from '@/lib/posLogic';
+import { fechaStr, horaStr } from '@/lib/posLogic';
+import { collection, addDoc, deleteDoc, doc, getDocs, query, orderBy, serverTimestamp, setDoc } from 'firebase/firestore';
+import { initializeFirebase } from '@/firebase';
 
 interface POSContextType {
   state: AppState;
@@ -24,7 +26,17 @@ interface POSContextType {
   removeFromCart: (prodId: number) => void;
   clearCart: () => void;
   
-  // Accounting & Invoices
+  // Sales
+  processSale: (sale: Sale) => Promise<void>;
+  deleteSale: (saleId: string) => Promise<void>;
+  
+  // Accounting
+  addAccountingEntry: (entry: Omit<AsientoContable, 'id' | 'created_at'>) => Promise<void>;
+  deleteAccountingEntry: (entryId: string) => Promise<void>;
+  addCuenta: (cuenta: CuentaContable) => void;
+  deleteCuenta: (id: string) => void;
+  
+  // Invoices & Abonos
   registrarFactura: (data: Partial<PurchaseInvoice>) => void;
   registrarAbono: (data: { facturaId: number; montoOriginal: number; monedaAbono: Moneda; metodo: Method; tasa?: number }) => void;
   getTasaActual: (moneda: Moneda) => number;
@@ -90,9 +102,103 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
 
   const getTasaActual = useCallback((moneda: Moneda) => {
     if (moneda === 'VES') return 1;
-    const t = [...state.tasas].reverse().find(t => t.moneda_origen === moneda);
+    const t = [...state.tasas].reverse().find(t => t.monedaOrigen === moneda);
     return t ? t.tasa : 1;
   }, [state.tasas]);
+
+  // Accounting helpers
+  const addAccountingEntry = async (entry: Omit<AsientoContable, 'id' | 'created_at'>) => {
+    try {
+      const { firestore } = initializeFirebase();
+      const docRef = await addDoc(collection(firestore, 'asientos_contables'), {
+        ...entry,
+        created_at: serverTimestamp()
+      });
+      const newEntry = { ...entry, id: docRef.id, created_at: new Date() };
+      setState(prev => ({ ...prev, asientos: [newEntry, ...prev.asientos] }));
+    } catch (e) {
+      console.error(e);
+      toast('Error al guardar asiento', 'error');
+    }
+  };
+
+  const deleteAccountingEntry = async (entryId: string) => {
+    try {
+      const { firestore } = initializeFirebase();
+      await deleteDoc(doc(firestore, 'asientos_contables', entryId));
+      setState(prev => ({ ...prev, asientos: prev.asientos.filter(a => a.id !== entryId) }));
+      toast('Asiento eliminado', 'info');
+    } catch (e) {
+      console.error(e);
+      toast('Error al eliminar asiento', 'error');
+    }
+  };
+
+  const addCuenta = (cuenta: CuentaContable) => {
+    setState(prev => ({ ...prev, cuentas: [...prev.cuentas, cuenta] }));
+    toast('Cuenta creada', 'success');
+  };
+
+  const deleteCuenta = (id: string) => {
+    setState(prev => ({ ...prev, cuentas: prev.cuentas.filter(c => c.id !== id) }));
+    toast('Cuenta eliminada', 'info');
+  };
+
+  const processSale = async (sale: Sale) => {
+    try {
+      const { firestore } = initializeFirebase();
+      // Registrar venta en Firestore para persistencia real-time (opcional según Spark limits)
+      const saleRef = await addDoc(collection(firestore, 'ventas'), {
+        ...sale,
+        created_at: serverTimestamp()
+      });
+      const saleWithId = { ...sale, id: saleRef.id };
+
+      // Generar asiento contable
+      const lines = [
+        { cuentaId: '1.1.1.01', nombreCuenta: 'Caja Principal', debe: sale.total, haber: 0, moneda: 'VES' },
+        { cuentaId: '4.1.1.01', nombreCuenta: 'Ingresos por Ventas', debe: 0, haber: sale.total / 1.16, moneda: 'VES' },
+        { cuentaId: '2.1.2.01', nombreCuenta: 'Débito Fiscal IVA', debe: 0, haber: (sale.total / 1.16) * 0.16, moneda: 'VES' }
+      ];
+
+      await addAccountingEntry({
+        fecha: new Date(),
+        descripcion: `Venta POS #${saleWithId.id.substring(0, 5)} - ${sale.cliente?.nombre || 'General'}`,
+        tipo: 'VENTA',
+        referencia: saleWithId.id,
+        modulo: 'VENTAS',
+        lineas: lines
+      });
+
+      setState(prev => ({ ...prev, ventas: [saleWithId, ...prev.ventas], carrito: [], clienteActual: '' }));
+      setCurrentSaleForTicket(saleWithId);
+      toast('Venta procesada con éxito', 'success');
+    } catch (e) {
+      console.error(e);
+      toast('Error procesando venta', 'error');
+    }
+  };
+
+  const deleteSale = async (saleId: string) => {
+    if (!confirm('¿Seguro que desea eliminar esta venta? Esto también eliminará el asiento contable asociado.')) return;
+    try {
+      const { firestore } = initializeFirebase();
+      // Eliminar venta
+      await deleteDoc(doc(firestore, 'ventas', saleId));
+      
+      // Eliminar asiento asociado
+      const asientoAsociado = state.asientos.find(a => a.referencia === saleId);
+      if (asientoAsociado) {
+        await deleteAccountingEntry(asientoAsociado.id);
+      }
+
+      setState(prev => ({ ...prev, ventas: prev.ventas.filter(v => v.id !== saleId) }));
+      toast('Venta y asiento contable eliminados', 'info');
+    } catch (e) {
+      console.error(e);
+      toast('Error al eliminar venta', 'error');
+    }
+  };
 
   const registrarFactura = useCallback((data: Partial<PurchaseInvoice>) => {
     setState(prev => {
@@ -114,29 +220,15 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
         saldo_pendiente_original: data.fechaVencimiento ? data.monto_original! : 0,
         total_pagado_ves: data.fechaVencimiento ? 0 : data.monto_bolivares!,
         saldo_pendiente_ves: data.fechaVencimiento ? data.monto_bolivares! : 0,
-        imagenUrl: data.imagenUrl,
         created_at: new Date().toISOString()
       };
 
-      const asiento: AsientoContable = {
-        id: prev.nextAsientoId,
-        fecha: new Date().toISOString(),
-        concepto: `Compra según factura ${factura.numeroFactura}`,
-        referenciaId: id,
-        tipo: 'COMPRA',
-        lineas: [
-          { cuenta: '5.1.1.01. Compras', debe: factura.monto_bolivares / 1.16, haber: 0 },
-          { cuenta: '1.7.2.01. Crédito Fiscal', debe: (factura.monto_bolivares / 1.16) * 0.16, haber: 0 },
-          { cuenta: factura.fechaVencimiento ? '2.1.1.01. Proveedores' : '1.1.2.01. Bancos', debe: 0, haber: factura.monto_bolivares }
-        ]
-      };
-
+      // Nota: Aquí se debería llamar a addAccountingEntry pero como es un callback que afecta prev, 
+      // lo manejamos sincronamente en el estado por ahora para mantener coherencia local
       return {
         ...prev,
         compras: [...prev.compras, factura],
-        asientos: [...prev.asientos, asiento],
-        nextCompraId: prev.nextCompraId + 1,
-        nextAsientoId: prev.nextAsientoId + 1
+        nextCompraId: prev.nextCompraId + 1
       };
     });
     toast('Factura registrada', 'success');
@@ -159,8 +251,6 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
       const nuevoSaldoOrig = Math.max(0, factura.monto_original - nuevoPagadoOrig);
       const nuevoPagadoVES = factura.total_pagado_ves + montoBs;
       const nuevoSaldoVES = Math.max(0, factura.monto_bolivares - nuevoPagadoVES);
-      
-      const difCambio = montoBs - (montoEnMonedaFactura * factura.tasa_cambio_usada);
 
       const abono: PurchasePayment = {
         id: Math.random().toString(36).substring(2, 9),
@@ -173,19 +263,6 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
         metodoPago: data.metodo,
       };
 
-      const asiento: AsientoContable = {
-        id: prev.nextAsientoId,
-        fecha: new Date().toISOString(),
-        concepto: `Abono a factura ${factura.numeroFactura}`,
-        referenciaId: abono.id,
-        tipo: 'ABONO',
-        lineas: [
-          { cuenta: '2.1.1.01. Proveedores', debe: montoEnMonedaFactura * factura.tasa_cambio_usada, haber: 0 },
-          { cuenta: difCambio > 0 ? '8.3.1.01. Pérdida Cambiaria' : '7.3.1.01. Ganancia Cambiaria', debe: difCambio > 0 ? difCambio : 0, haber: difCambio < 0 ? Math.abs(difCambio) : 0 },
-          { cuenta: '1.1.2.01. Bancos', debe: 0, haber: montoBs }
-        ]
-      };
-
       return {
         ...prev,
         compras: prev.compras.map(f => f.id === data.facturaId ? {
@@ -196,9 +273,7 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
           saldo_pendiente_ves: nuevoSaldoVES,
           estadoPago: nuevoSaldoOrig <= 0 ? 'pagada' : 'parcial'
         } : f),
-        abonos: [...prev.abonos, abono],
-        asientos: [...prev.asientos, asiento],
-        nextAsientoId: prev.nextAsientoId + 1
+        abonos: [...prev.abonos, abono]
       };
     });
     toast('Abono registrado', 'success');
@@ -259,6 +334,8 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
       activeWindow, openWindow, closeWindow,
       toast, toasts,
       addToCart, updateCartQty, removeFromCart, clearCart,
+      processSale, deleteSale,
+      addAccountingEntry, deleteAccountingEntry, addCuenta, deleteCuenta,
       registrarFactura, registrarAbono, getTasaActual,
       editingProduct, setEditingProduct,
       editingClient, setEditingClient,

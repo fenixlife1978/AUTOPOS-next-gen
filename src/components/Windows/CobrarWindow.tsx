@@ -18,10 +18,11 @@ const PAYMENT_METHODS: { id: Method; label: string; icon: string }[] = [
 ];
 
 export default function CobrarWindow() {
-  const { state, setState, activeWindow, closeWindow, openWindow, setCurrentSaleForTicket, toast } = usePOS();
+  const { state, activeWindow, closeWindow, openWindow, processSale } = usePOS();
   const [metodo, setMetodo] = useState<Method>('efectivo_bs');
   const [montoRecibido, setMontoRecibido] = useState('');
   const [nota, setNota] = useState('');
+  const [processing, setProcessing] = useState(false);
 
   const cartItems = state.carrito.map(c => {
     const p = state.productos.find(pr => pr.id === c.prodId);
@@ -36,7 +37,7 @@ export default function CobrarWindow() {
   const cambio = Math.max(0, recibidoNum - total);
   
   const isCash = metodo === 'efectivo_bs' || metodo === 'efectivo_usd';
-  const canProcess = !isCash || recibidoNum >= total;
+  const canProcess = (!isCash || recibidoNum >= total) && !processing;
 
   const numpadInput = (val: string) => {
     if (val === 'del') setMontoRecibido(prev => prev.slice(0, -1));
@@ -48,57 +49,41 @@ export default function CobrarWindow() {
     }
   };
 
-  const handleProcess = () => {
+  const handleProcess = async () => {
     if (!cartItems.length) return;
+    setProcessing(true);
     
-    setState(prev => {
-      const newProductos = prev.productos.map(p => {
-        const itemInCart = cartItems.find(i => i?.id === p.id);
-        if (itemInCart && p.categoria !== 'servicio') {
-          return { ...p, stock: Math.max(0, p.stock - itemInCart.cantidad) };
-        }
-        return p;
-      });
+    const cliObj = state.clienteActual !== '' ? state.clientes.find(c => c.id === state.clienteActual) : null;
+    
+    const venta: Sale = {
+      id: '', // Firestore generará el ID
+      fecha: new Date().toISOString(),
+      fechaStr: fechaStr(),
+      horaStr: horaStr(),
+      cliente: cliObj || null,
+      clienteId: state.clienteActual !== '' ? (state.clienteActual as number) : null,
+      items: cartItems.map(i => ({
+        id: i!.id,
+        nombre: i!.nombre,
+        cantidad: i!.cantidad,
+        precio: i!.precio,
+        subtotal: i!.subtotal,
+        unidad: i!.unidad,
+        categoria: i!.categoria
+      })),
+      subtotal,
+      iva,
+      total,
+      metodo,
+      recibido: isCash ? recibidoNum : total,
+      cambio: isCash ? cambio : 0,
+      nota
+    };
 
-      const cliObj = typeof prev.clienteActual === 'number' ? prev.clientes.find(c => c.id === prev.clienteActual) : null;
-      const venta: Sale = {
-        id: Math.random().toString(36).substring(2, 9),
-        fecha: new Date().toISOString(),
-        fechaStr: fechaStr(),
-        horaStr: horaStr(),
-        cliente: cliObj || null,
-        clienteId: typeof prev.clienteActual === 'number' ? prev.clienteActual : null,
-        items: cartItems.map(i => ({
-          id: i!.id,
-          nombre: i!.nombre,
-          cantidad: i!.cantidad,
-          precio: i!.precio,
-          subtotal: i!.subtotal,
-          unidad: i!.unidad,
-          categoria: i!.categoria
-        })),
-        subtotal,
-        iva,
-        total,
-        metodo,
-        recibido: isCash ? recibidoNum : total,
-        cambio: isCash ? cambio : 0,
-        nota
-      };
-
-      setCurrentSaleForTicket(venta);
-      return {
-        ...prev,
-        productos: newProductos,
-        ventas: [...prev.ventas, venta],
-        carrito: [],
-        clienteActual: ''
-      };
-    });
-
+    await processSale(venta);
+    setProcessing(false);
     closeWindow();
     openWindow('ticket');
-    toast('Venta procesada', 'success');
   };
 
   return (
@@ -113,7 +98,7 @@ export default function CobrarWindow() {
         <>
           <button className="btn btn-secondary" onClick={closeWindow}>Cancelar</button>
           <button className="btn btn-success" disabled={!canProcess} onClick={handleProcess}>
-            <i className="fas fa-check"></i>Procesar Pago
+            <i className="fas fa-check"></i>{processing ? 'Procesando...' : 'Procesar Pago'}
           </button>
         </>
       }

@@ -4,6 +4,7 @@ export type Method = 'efectivo_bs' | 'pago_movil' | 'biopago' | 'transferencia' 
 export type AccountStatus = 'PENDIENTE' | 'PARCIAL' | 'COBRADO' | 'VENCIDO' | 'CASTIGADO';
 export type FacturaTipo = 'FISCAL_SENIAT' | 'NOTA_ENTREGA';
 export type Moneda = 'VES' | 'USD' | 'EUR';
+export type AccountType = 'ACTIVO' | 'PASIVO' | 'PATRIMONIO' | 'INGRESO' | 'GASTO';
 
 export interface TasaCambio {
   id?: string;
@@ -16,64 +17,123 @@ export interface TasaCambio {
 }
 
 export interface Client {
-  id: string;
+  id: number;
   nombre: string;
   rif?: string;
   telefono?: string;
   email?: string;
   direccion?: string;
-  created_at: any;
+  placa?: string;
+  vehiculo?: string;
+  notas?: string;
 }
 
-export interface SalesInvoice {
+export interface Product {
+  id: number;
+  nombre: string;
+  categoria: 'lubricante' | 'repuesto' | 'servicio';
+  codigo: string;
+  precio: number;
+  costo: number;
+  porcentajeGanancia: number;
+  porcentajeIVA: number;
+  stock: number;
+  unidad: string;
+  desc?: string;
+  icon?: string;
+}
+
+export interface CartItem {
+  prodId: number;
+  cantidad: number;
+}
+
+export interface Sale {
   id: string;
-  clienteId: string;
+  fecha: string;
+  fechaStr: string;
+  horaStr: string;
+  cliente: Client | null;
+  clienteId: number | null;
+  items: {
+    id: number;
+    nombre: string;
+    cantidad: number;
+    precio: number;
+    subtotal: number;
+    unidad: string;
+    categoria: string;
+  }[];
+  subtotal: number;
+  iva: number;
+  total: number;
+  metodo: Method;
+  recibido: number;
+  cambio: number;
+  nota?: string;
+}
+
+export interface Supplier {
+  id: number;
+  nombre: string;
+  rif?: string;
+  contacto?: string;
+  telefono?: string;
+  email?: string;
+  direccion?: string;
+  categoria: 'lubricante' | 'repuesto' | 'general';
+  notas?: string;
+}
+
+export interface PurchaseInvoice {
+  id: number;
+  proveedorId: number;
   numeroFactura: string;
-  fechaEmision: any;
-  fechaVencimiento: any;
-  monedaOriginal: Moneda;
-  montoOriginal: number;
-  tasaCambioUsada: number;
-  montoBolivares: number;
-  saldoPendienteOriginal: number;
-  saldoPendienteVes: number;
-  totalCobradoOriginal: number;
-  totalCobradoVes: number;
-  estado: AccountStatus;
-  created_at: any;
-  updated_at: any;
+  fechaEmision: string;
+  fechaVencimiento?: string;
+  moneda_original: Moneda;
+  monto_original: number;
+  monto_bolivares: number;
+  tasa_cambio_usada: number;
+  tasa_fuente: string;
+  tipoFactura: FacturaTipo;
+  estadoPago: 'pendiente' | 'parcial' | 'pagada' | 'vencida';
+  total_pagado_original: number;
+  saldo_pendiente_original: number;
+  total_pagado_ves: number;
+  saldo_pendiente_ves: number;
+  imagenUrl?: string;
+  created_at: string;
 }
 
-export interface CollectionRecord {
+export interface PurchasePayment {
   id: string;
-  facturaId: string;
-  fechaCobro: any;
-  monedaCobro: Moneda;
-  montoOriginal: number;
-  montoBolivares: number;
-  tasaCambioAplicada: number;
+  facturaId: number;
+  moneda_abono: Moneda;
+  monto_original: number;
+  monto_bolivares: number;
+  tasa_cambio_aplicada: number;
+  fechaAbono: string;
   metodoPago: Method;
-  referencia?: string;
-  created_at: any;
 }
 
-export interface CreditNote {
+export interface CuentaContable {
   id: string;
-  facturaId: string;
-  motivo: string;
-  montoOriginal: number;
-  montoBolivares: number;
-  fechaEmision: any;
-  created_at: any;
+  codigo: string;
+  nombre: string;
+  tipo: AccountType;
+  nivel: number;
+  padreId?: string;
+  editable: boolean;
 }
 
-export interface AccountingEntry {
+export interface AsientoContable {
   id: string;
   fecha: any;
   descripcion: string;
-  tipo: 'VENTA' | 'COBRO' | 'NOTA_CREDITO' | 'CASTIGO';
+  tipo: 'VENTA' | 'COMPRA' | 'COBRO' | 'ABONO' | 'AJUSTE' | 'OTRO';
   referencia: string;
-  modulo: 'CLIENTES';
+  modulo: 'VENTAS' | 'COMPRAS' | 'CLIENTES' | 'PROVEEDORES' | 'CONTABILIDAD';
   lineas: {
     cuentaId: string;
     nombreCuenta: string;
@@ -84,32 +144,22 @@ export interface AccountingEntry {
   created_at: any;
 }
 
-export interface CxCMovement {
-  id: string;
-  clienteId: string;
-  facturaId: string;
-  tipo: 'FACTURA' | 'COBRO' | 'NOTA_CREDITO' | 'CASTIGO';
-  fecha: any;
-  monedaOriginal: string;
-  montoOriginal: number;
-  montoBolivares: number;
-  saldoOriginalAcumulado: number;
-  saldoVesAcumulado: number;
-  created_at: any;
-}
-
 export interface AppState {
-  productos: any[];
+  productos: Product[];
   clientes: Client[];
-  proveedores: any[];
-  ventas: any[];
-  compras: any[];
-  abonos: any[];
-  asientos: AccountingEntry[];
+  proveedores: Supplier[];
+  ventas: Sale[];
+  compras: PurchaseInvoice[];
+  abonos: PurchasePayment[];
+  asientos: AsientoContable[];
   tasas: TasaCambio[];
-  carrito: { prodId: number; cantidad: number }[];
-  clienteActual: string | '';
+  cuentas: CuentaContable[];
+  carrito: CartItem[];
+  clienteActual: number | '';
   nextProdId: number;
   nextCliId: number;
   nextProvId: number;
+  nextAsientoId: number;
+  nextTasaId: number;
+  nextCompraId: number;
 }

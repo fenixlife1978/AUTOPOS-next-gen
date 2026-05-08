@@ -1,7 +1,7 @@
 
-import { AppState, Product, Client, Supplier, PurchaseInvoice, PurchasePayment, TasaCambio } from './types';
+import { AppState, Product, Client, Supplier, CuentaContable, TasaCambio } from './types';
 
-export const STORAGE_KEY = 'autopos_v4_accounting';
+export const STORAGE_KEY = 'autopos_v4_accounting_v2';
 
 export const PRODUCTOS_INICIALES: Product[] = [
   {id:1,nombre:'Aceite Sintético 5W-30 1L',categoria:'lubricante',codigo:'LUB-001',precio:285,costo:180,porcentajeGanancia:0,porcentajeIVA:16,stock:24,unidad:'litro',desc:'Aceite motor sintético de alta performance',icon:'fa-bottle-droplet'},
@@ -17,9 +17,23 @@ export const PROVEEDORES_INICIALES: Supplier[] = [
   {id:1,nombre:'Distribuidora Nacional de Aceites SA',rif:'J-12345678-9',contacto:'Juan Pérez',telefono:'555-800-1000',email:'ventas@dna.com',direccion:'Zona Industrial #200',categoria:'lubricante',notas:'Entrega los martes'}
 ];
 
+export const CUENTAS_INICIALES: CuentaContable[] = [
+  { id: '1.1.1.01', codigo: '1.1.1.01', nombre: 'Caja Principal', tipo: 'ACTIVO', nivel: 3, editable: false },
+  { id: '1.1.1.02', codigo: '1.1.1.02', nombre: 'Caja Chica', tipo: 'ACTIVO', nivel: 3, editable: false },
+  { id: '1.1.2.01', codigo: '1.1.2.01', nombre: 'Banco Mercantil', tipo: 'ACTIVO', nivel: 3, editable: true },
+  { id: '1.1.2.02', codigo: '1.1.2.02', nombre: 'Banco Banesco', tipo: 'ACTIVO', nivel: 3, editable: true },
+  { id: '1.1.3.01', codigo: '1.1.3.01', nombre: 'Cuentas por Cobrar Clientes', tipo: 'ACTIVO', nivel: 3, editable: false },
+  { id: '1.7.2.01', codigo: '1.7.2.01', nombre: 'Crédito Fiscal IVA', tipo: 'ACTIVO', nivel: 3, editable: false },
+  { id: '2.1.1.01', codigo: '2.1.1.01', nombre: 'Cuentas por Pagar Proveedores', tipo: 'PASIVO', nivel: 3, editable: false },
+  { id: '2.1.2.01', codigo: '2.1.2.01', nombre: 'Débito Fiscal IVA', tipo: 'PASIVO', nivel: 3, editable: false },
+  { id: '4.1.1.01', codigo: '4.1.1.01', nombre: 'Ingresos por Ventas', tipo: 'INGRESO', nivel: 3, editable: false },
+  { id: '5.1.1.01', codigo: '5.1.1.01', nombre: 'Costo de Ventas', tipo: 'GASTO', nivel: 3, editable: false },
+  { id: '7.3.1.01', codigo: '7.3.1.01', nombre: 'Ganancia Cambiaria', tipo: 'INGRESO', nivel: 3, editable: false },
+  { id: '8.3.1.01', codigo: '8.3.1.01', nombre: 'Pérdida Cambiaria', tipo: 'GASTO', nivel: 3, editable: false }
+];
+
 export const TASAS_INICIALES: TasaCambio[] = [
-  { id: 1, moneda_origen: 'USD', moneda_destino: 'VES', tasa: 45.50, fecha: new Date().toISOString(), fuente: 'BCV' },
-  { id: 2, moneda_origen: 'EUR', moneda_destino: 'VES', tasa: 49.20, fecha: new Date().toISOString(), fuente: 'BCV' }
+  { monedaOrigen: 'USD', monedaDestino: 'VES', tasa: 45.50, fecha: new Date(), fuente: 'BCV', created_at: new Date() }
 ];
 
 export const DEFAULT_STATE: AppState = {
@@ -31,17 +45,15 @@ export const DEFAULT_STATE: AppState = {
   abonos: [],
   asientos: [],
   tasas: TASAS_INICIALES,
+  cuentas: CUENTAS_INICIALES,
   carrito: [],
   clienteActual: '',
-  storageMode: 'hybrid',
   nextProdId: 37,
   nextCliId: 3,
   nextProvId: 3,
-  nextVentaId: 1,
-  nextCompraId: 1,
-  nextAbonoId: 1,
   nextAsientoId: 1,
-  nextTasaId: 3
+  nextTasaId: 3,
+  nextCompraId: 1
 };
 
 export function saveState(state: AppState) {
