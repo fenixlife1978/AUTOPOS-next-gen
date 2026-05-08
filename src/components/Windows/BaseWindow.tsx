@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useRef } from 'react';
+import React, { useEffect } from 'react';
 
 interface Props {
   id: string;
@@ -15,38 +15,47 @@ interface Props {
 }
 
 export default function BaseWindow({ id, title, icon, width = '440px', children, footer, isOpen, onClose }: Props) {
-  const windowRef = useRef<HTMLDivElement>(null);
+  // Hooks must be at the top
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) onClose();
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
   const style: React.CSSProperties = {
-    display: 'flex',
     width: width,
-    maxWidth: '95vw',
-    maxHeight: '90vh',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    position: 'fixed',
+    display: 'flex',
+    zIndex: 5001,
   };
 
   return (
-    <div id={`win-${id}`} className="app-window" style={style} ref={windowRef}>
-      <div className="win-titlebar">
-        <i className={`fas ${icon}`}></i>
-        <span>{title}</span>
-        <button className="win-btn close" onClick={onClose} aria-label="Cerrar">
-          <i className="fas fa-xmark"></i>
-        </button>
-      </div>
-      <div className="win-body">
-        {children}
-      </div>
-      {footer && (
-        <div className="win-footer">
-          {footer}
+    <div className="window-overlay show" onClick={onClose}>
+      <div 
+        id={`win-${id}`} 
+        className="app-window" 
+        style={style} 
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="win-titlebar">
+          <i className={`fas ${icon}`}></i>
+          <span>{title}</span>
+          <button className="win-btn close" onClick={onClose} aria-label="Cerrar">
+            <i className="fas fa-xmark"></i>
+          </button>
         </div>
-      )}
+        <div className="win-body">
+          {children}
+        </div>
+        {footer && (
+          <div className="win-footer">
+            {footer}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

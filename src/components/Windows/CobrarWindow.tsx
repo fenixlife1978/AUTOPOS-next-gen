@@ -35,7 +35,6 @@ export default function CobrarWindow() {
   const recibidoNum = parseFloat(montoRecibido) || 0;
   const cambio = Math.max(0, recibidoNum - total);
   
-  // Show numpad only for cash methods
   const isCash = metodo === 'efectivo_bs' || metodo === 'efectivo_usd';
   const canProcess = !isCash || recibidoNum >= total;
 
@@ -61,14 +60,14 @@ export default function CobrarWindow() {
         return p;
       });
 
-      const cliObj = prev.clienteActual ? prev.clientes.find(c => String(c.id) === String(prev.clienteActual)) : null;
+      const cliObj = prev.clienteActual ? prev.clientes.find(c => c.id === prev.clienteActual) : null;
       const venta: Sale = {
-        id: prev.nextVentaId,
+        id: Math.random().toString(36).substring(2, 9),
         fecha: new Date().toISOString(),
         fechaStr: fechaStr(),
         horaStr: horaStr(),
         cliente: cliObj || null,
-        clienteId: prev.clienteActual ? parseInt(prev.clienteActual) : null,
+        clienteId: prev.clienteActual || null,
         items: cartItems.map(i => ({
           id: i!.id,
           nombre: i!.nombre,
@@ -92,7 +91,6 @@ export default function CobrarWindow() {
         ...prev,
         productos: newProductos,
         ventas: [...prev.ventas, venta],
-        nextVentaId: prev.nextVentaId + 1,
         carrito: [],
         clienteActual: ''
       };

@@ -9,7 +9,7 @@ import { Method } from '@/lib/types';
 
 export default function AccountsPayableWindow() {
   const { state, setState, activeWindow, closeWindow, toast } = usePOS();
-  const [abonoModal, setAbonoModal] = useState<{ open: boolean; facturaId: number | null }>({ open: false, facturaId: null });
+  const [abonoModal, setAbonoModal] = useState<{ open: boolean; facturaId: string | null }>({ open: false, facturaId: null });
   const [montoAbono, setMontoAbono] = useState('');
   const [metodoPago, setMetodoPago] = useState<Method>('efectivo_bs');
 
@@ -26,11 +26,11 @@ export default function AccountsPayableWindow() {
       if (!factura) return prev;
 
       const nuevoTotalPagado = factura.totalPagado + monto;
-      const nuevoSaldo = factura.saldoPendiente - monto;
+      const nuevoSaldo = Math.max(0, factura.saldoPendiente - monto);
       const nuevoEstado = nuevoSaldo <= 0 ? 'pagada' : 'parcial';
 
       const nuevoAbono = {
-        id: prev.nextAbonoId,
+        id: Math.random().toString(36).substring(2, 9),
         facturaId: factId,
         montoBolivares: monto,
         fechaAbono: new Date().toISOString(),
@@ -40,8 +40,7 @@ export default function AccountsPayableWindow() {
       return {
         ...prev,
         compras: prev.compras.map(f => f.id === factId ? { ...f, totalPagado: nuevoTotalPagado, saldoPendiente: nuevoSaldo, estadoPago: nuevoEstado as any } : f),
-        abonos: [...prev.abonos, nuevoAbono as any],
-        nextAbonoId: prev.nextAbonoId + 1
+        abonos: [...prev.abonos, nuevoAbono],
       };
     });
 
