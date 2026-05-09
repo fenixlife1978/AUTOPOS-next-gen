@@ -19,8 +19,23 @@ export default function ProductsPanel() {
   const [categoriaFiltro, setCategoriaFiltro] = useState<Category | 'todos'>('todos');
 
   const filteredProducts = state.productos.filter(p => {
-    const matchCat = categoriaFiltro === 'todos' || p.categoria === categoriaFiltro;
-    const matchQ = !q || p.nombre.toLowerCase().includes(q.toLowerCase()) || p.codigo.toLowerCase().includes(q.toLowerCase());
+    // Lógica de filtrado inteligente: 
+    // Si seleccionamos "Repuestos", mostramos todo lo que NO sea lubricante o servicio
+    let matchCat = categoriaFiltro === 'todos';
+    if (!matchCat) {
+      if (categoriaFiltro === 'repuesto') {
+        const esExcluido = p.categoria === 'lubricante' || p.categoria === 'servicio';
+        matchCat = !esExcluido;
+      } else {
+        matchCat = p.categoria === categoriaFiltro;
+      }
+    }
+
+    const matchQ = !q || 
+      p.nombre.toLowerCase().includes(q.toLowerCase()) || 
+      p.codigo.toLowerCase().includes(q.toLowerCase()) ||
+      (p.marca || '').toLowerCase().includes(q.toLowerCase());
+
     return matchCat && matchQ;
   });
 
@@ -32,7 +47,7 @@ export default function ProductsPanel() {
           <input 
             type="text" 
             className="search-input" 
-            placeholder="Buscar producto o servicio..." 
+            placeholder="Buscar por nombre, código o marca..." 
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
@@ -55,7 +70,8 @@ export default function ProductsPanel() {
       <div className="products-grid">
         {filteredProducts.length === 0 ? (
           <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px', color: 'var(--muted)' }}>
-            Sin resultados
+            <i className="fas fa-box-open mb-2 block text-2xl opacity-20"></i>
+            Sin resultados para esta categoría
           </div>
         ) : (
           filteredProducts.map((p) => {
@@ -76,7 +92,7 @@ export default function ProductsPanel() {
                 </div>
                 <div className="prod-name">{p.nombre}</div>
                 <div className="prod-price">{p.precio === 0 ? 'Gratis' : fmt(p.precio)}</div>
-                <div className="prod-stock ${isLowStock ? 'low' : ''}">{stockText}</div>
+                <div className={`prod-stock ${isLowStock ? 'low' : ''}`}>{stockText}</div>
               </div>
             );
           })

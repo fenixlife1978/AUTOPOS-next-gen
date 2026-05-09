@@ -25,28 +25,31 @@ export default function StatusBar() {
 
   return (
     <div className="status-bar">
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-        <span><span className="status-dot"></span>Conectado</span>
-        <span>{mounted ? `${time.date} ${time.time}` : 'Cargando...'}</span>
+      <div className="flex items-center gap-4 overflow-hidden">
+        <span className="whitespace-nowrap flex items-center shrink-0">
+          <span className="status-dot"></span>Conectado
+        </span>
+        <span className="whitespace-nowrap shrink-0">{mounted ? `${time.date} ${time.time}` : 'Cargando...'}</span>
         
         {!isCatalogReady && (
-          <div className="flex items-center gap-2 ml-4 px-2 py-1 bg-[var(--bg3)] rounded border border-[var(--border)]">
+          <div className="flex items-center gap-2 px-3 py-0.5 bg-[var(--accent-glow)] rounded-full border border-[var(--accent)] shadow-[0_0_10px_var(--accent-glow)] animate-pulse">
             <Loader2 size={12} className="animate-spin text-[var(--accent)]" />
-            <span className="text-[10px] text-muted uppercase font-bold tracking-tighter">
-              Cargando Catálogo Maestro: {catalogProgress}%
+            <span className="text-[9px] text-[var(--accent)] uppercase font-black tracking-tight whitespace-nowrap">
+              Sincronizando Catálogo Maestro: {catalogProgress}%
             </span>
-            <div className="w-16 h-1.5 bg-[var(--bg)] rounded-full overflow-hidden">
+            <div className="w-20 h-1.5 bg-[var(--bg)] rounded-full overflow-hidden border border-[var(--border)] shrink-0">
               <div 
-                className="h-full bg-[var(--accent)] transition-all duration-300" 
+                className="h-full bg-[var(--accent)] transition-all duration-500 ease-out" 
                 style={{ width: `${catalogProgress}%` }}
               ></div>
             </div>
           </div>
         )}
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-        <span>Ventas hoy: {ventasHoy.length}</span>
-        <span>Ingresos: {fmt(ingresosHoy)}</span>
+      
+      <div className="flex items-center gap-4 shrink-0">
+        <span className="hidden sm:inline">Ventas hoy: {ventasHoy.length}</span>
+        <span className="font-bold text-[var(--accent)]">Ingresos: {fmt(ingresosHoy)}</span>
       </div>
     </div>
   );
