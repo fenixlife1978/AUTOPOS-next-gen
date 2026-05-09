@@ -324,6 +324,19 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const deleteSale = async (saleId: string) => {
+    if (!confirm('¿Desea eliminar esta venta? Esta acción no se puede deshacer.')) return;
+    try {
+      const { firestore } = initializeFirebase();
+      await deleteDoc(doc(firestore, 'ventas', saleId));
+      setState(prev => ({ ...prev, ventas: prev.ventas.filter(v => v.id !== saleId) }));
+      toast('Venta eliminada', 'info');
+    } catch (e) {
+      console.error(e);
+      toast('Error al eliminar venta', 'error');
+    }
+  };
+
   const getTasaActual = useCallback((moneda: Moneda) => {
     if (moneda === 'VES') return 1;
     const t = [...state.tasas].reverse().find(t => t.monedaOrigen === moneda);
