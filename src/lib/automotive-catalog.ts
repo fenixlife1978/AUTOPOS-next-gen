@@ -2,7 +2,7 @@
 /**
  * @fileOverview Catálogo Maestro Automotriz (+18,000 items).
  * Persistencia optimizada: Firebase RTDB -> IndexedDB -> RAM.
- * Soporte para seguimiento de progreso de carga.
+ * Soporte para seguimiento de progreso de carga con procesamiento asíncrono por lotes.
  */
 
 import { initializeFirebase } from '@/firebase';
@@ -17,13 +17,12 @@ export interface CatalogItem {
 
 const DB_NAME = 'AutoPOS_Master_Catalog';
 const STORE_NAME = 'Items';
-const RTDB_PATH = 'catalog_v4';
+const RTDB_PATH = 'catalog_v5';
 
 let RAM_CATALOG: CatalogItem[] | null = null;
 let IS_LOADING = false;
 let CURRENT_PROGRESS = 0;
 
-// Tipado para el callback de progreso
 export type ProgressCallback = (percent: number) => void;
 
 const VEHICULOS = ['Toyota Corolla', 'Toyota Hilux', 'Ford Fiesta', 'Ford Explorer', 'Chevrolet Aveo', 'Chevrolet Optra', 'Chevrolet Spark', 'Fiat Uno', 'Hyundai Elantra', 'Honda Civic', 'Jeep Grand Cherokee', 'Mitsubishi Lancer'];
@@ -40,16 +39,21 @@ const PARTES = {
   'servicio': ['Cambio de Aceite', 'Limpieza de Inyectores', 'Revisión de Frenos', 'Lavado y Engrase', 'Escaneo Computarizado', 'Mecánica Ligera']
 };
 
-function generateSeedData(onProgress?: ProgressCallback): CatalogItem[] {
+/**
+ * Genera datos de forma asíncrona para no bloquear el hilo principal.
+ */
+async function generateSeedDataAsync(onProgress?: ProgressCallback): Promise<CatalogItem[]> {
   const catalog: CatalogItem[] = [];
   const marcasLubricantes = ['PDV', 'Shell', 'Motul', 'Castrol', 'Mobil', 'Valvoline', 'Inca', 'Venoco', 'Sky', 'TotalEnergies'];
   
-  const totalSteps = VEHICULOS.length;
+  const totalVehiculos = VEHICULOS.length;
   
-  VEHICULOS.forEach((vehiculo, vIdx) => {
-    Object.entries(PARTES).forEach(([cat, items]) => {
-      items.forEach(item => {
-        MARCAS.forEach(marca => {
+  for (let vIdx = 0; vIdx < totalVehiculos; vIdx++) {
+    const vehiculo = VEHICULOS[vIdx];
+    
+    for (const [cat, items] of Object.entries(PARTES)) {
+      for (const item of items) {
+        for (const marca of MARCAS) {
           const esCatLubricante = cat === 'lubricante';
           const esMarcaLubricante = marcasLubricantes.includes(marca);
           
@@ -61,21 +65,26 @@ function generateSeedData(onProgress?: ProgressCallback): CatalogItem[] {
               unidad: cat === 'servicio' ? 'servicio' : (cat === 'lubricante' ? 'litro' : 'pieza')
             });
           }
-        });
-      });
-    });
+        }
+      }
+    }
     
+    // Notificar progreso y ceder control al navegador
     if (onProgress) {
-      const progress = Math.round(((vIdx + 1) / totalSteps) * 100);
+      const progress = Math.round(((vIdx + 1) / totalVehiculos) * 100);
       onProgress(progress);
     }
-  });
+    
+    // Pequeña pausa para permitir que el navegador actualice la UI
+    await new Promise(resolve => setTimeout(resolve, 0));
+  }
+  
   return catalog;
 }
 
 async function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, 4);
+    const request = indexedDB.open(DB_NAME, 5);
     request.onupgradeneeded = () => {
       if (!request.result.objectStoreNames.contains(STORE_NAME)) {
         request.result.createObjectStore(STORE_NAME);
@@ -91,7 +100,9 @@ async function saveLocal(data: CatalogItem[]) {
     const db = await openDB();
     const tx = db.transaction(STORE_NAME, 'readwrite');
     tx.objectStore(STORE_NAME).put(data, 'cached_catalog');
-  } catch (e) {}
+  } catch (e) {
+    console.error('Error saving to IndexedDB:', e);
+  }
 }
 
 async function getLocal(): Promise<CatalogItem[] | null> {
@@ -116,7 +127,7 @@ export async function initCatalog(onProgress?: ProgressCallback): Promise<Catalo
 
   IS_LOADING = true;
 
-  // 1. Cargar desde IndexedDB
+  // 1. Intentar cargar desde IndexedDB (Máxima prioridad)
   if (onProgress) onProgress(5);
   const cached = await getLocal();
   if (cached && cached.length > 0) {
@@ -126,30 +137,37 @@ export async function initCatalog(onProgress?: ProgressCallback): Promise<Catalo
     return RAM_CATALOG;
   }
 
-  // 2. Si no hay local, intentar descargar de RTDB
+  // 2. Si no hay local, intentar descargar de RTDB (con timeout para evitar colgarse)
   if (onProgress) onProgress(10);
   try {
     const { rtdb } = initializeFirebase();
-    const snap = await get(ref(rtdb, RTDB_PATH));
-    if (snap.exists()) {
+    const rtdbPromise = get(ref(rtdb, RTDB_PATH));
+    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000));
+    
+    const snap = await Promise.race([rtdbPromise, timeoutPromise]) as any;
+    if (snap && snap.exists()) {
       RAM_CATALOG = snap.val();
       await saveLocal(RAM_CATALOG!);
       IS_LOADING = false;
       if (onProgress) onProgress(100);
       return RAM_CATALOG!;
     }
-  } catch (e) {}
+  } catch (e) {
+    console.warn('RTDB load failed or timed out, falling back to local generation');
+  }
 
-  // 3. Fallback: Generar masivamente si es la primera vez absoluta
+  // 3. Fallback: Generación asíncrona por lotes
   if (onProgress) onProgress(15);
-  RAM_CATALOG = generateSeedData((p) => {
-    const adjustedProgress = 15 + Math.round(p * 0.7); // Escalar de 15% a 85%
+  RAM_CATALOG = await generateSeedDataAsync((p) => {
+    const adjustedProgress = 15 + Math.round(p * 0.8); // Escalar de 15% a 95%
     if (onProgress) onProgress(adjustedProgress);
   });
   
+  // Guardar permanentemente en disco
   await saveLocal(RAM_CATALOG);
-  if (onProgress) onProgress(95);
+  if (onProgress) onProgress(98);
   
+  // Opcional: Intentar subir a RTDB en segundo plano
   try {
     const { rtdb } = initializeFirebase();
     set(ref(rtdb, RTDB_PATH), RAM_CATALOG);
