@@ -1,4 +1,3 @@
-
 "use client";
 
 import './globals.css';
@@ -32,8 +31,8 @@ export default function RootLayout({
   return (
     <html lang="es">
       <head>
-        <title>AutoPOS - Sistema de Ventas Automotriz</title>
-        <meta name="description" content="Sistema POS profesional para talleres y refaccionarias automotrices." />
+        <title>AutoPOS v1 next-gen - Sistema de Ventas Automotriz</title>
+        <meta name="description" content="Sistema POS profesional de próxima generación para talleres y refaccionarias automotrices." />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -47,11 +46,17 @@ export default function RootLayout({
         ) : (
           <div className="flex flex-col h-screen items-center justify-center bg-[#0c0c14] text-white">
             <div className="relative">
-              <i className="fas fa-cog fa-spin text-5xl text-[var(--accent)] mb-4"></i>
-              <i className="fas fa-car absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[var(--accent)] text-xs"></i>
+              <i className="fas fa-oil-can fa-bounce text-6xl text-[var(--accent)] mb-6"></i>
+              <div className="absolute -bottom-2 -right-2 bg-[var(--bg)] p-1 rounded-full border border-[var(--accent)]/30">
+                <i className="fas fa-gear fa-spin text-[var(--accent)] text-sm"></i>
+              </div>
             </div>
-            <h1 className="text-2xl font-bold font-headline mb-2 text-[var(--accent)]">AutoPOS Professional</h1>
-            <p className="text-[10px] text-gray-500 uppercase tracking-widest">Iniciando núcleo del sistema...</p>
+            <h1 className="text-3xl font-bold font-headline mb-1 tracking-tight">AutoPOS <span className="text-[var(--accent)]">v1</span></h1>
+            <p className="text-[12px] text-gray-400 uppercase tracking-[0.3em] font-medium">next-gen system</p>
+            <div className="mt-8 flex items-center gap-2">
+              <div className="w-1 h-1 bg-[var(--accent)] rounded-full animate-ping"></div>
+              <p className="text-[9px] text-gray-500 uppercase tracking-widest">Iniciando núcleo del sistema...</p>
+            </div>
           </div>
         )}
       </body>

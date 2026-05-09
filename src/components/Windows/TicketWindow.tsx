@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from 'react';
@@ -128,7 +127,7 @@ export default function TicketWindow() {
 
         <div className="text-center mt-6">
           <p className="font-bold">¡GRACIAS POR SU COMPRA!</p>
-          <p className="text-[8px] mt-2 italic">Desarrollado por AutoPOS Professional</p>
+          <p className="text-[8px] mt-2 italic">Desarrollado por AutoPOS v1 next-gen</p>
         </div>
       </div>
     </BaseWindow>

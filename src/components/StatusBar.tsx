@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -26,9 +25,9 @@ export default function StatusBar() {
   return (
     <div className="status-bar" style={{ minWidth: 'fit-content' }}>
       <div className="flex items-center gap-4 flex-1">
-        <span className="flex items-center gap-1 shrink-0">
+        <span className="flex items-center gap-2 shrink-0">
           <span className="status-dot"></span>
-          <span className="hidden xs:inline">Sistema</span> Conectado
+          <span className="font-bold text-[10px] tracking-widest text-[var(--accent)] uppercase">AutoPOS v1 next-gen</span>
         </span>
         
         <span className="shrink-0 hidden md:inline opacity-70">

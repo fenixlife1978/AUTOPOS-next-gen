@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -24,16 +23,22 @@ export default function MenuBar() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `autopos_backup_${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `autopos_v1_backup_${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
 
   return (
     <div className="menu-bar" onMouseLeave={closeMenu}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', paddingRight: '12px', borderRight: '1px solid var(--border)', marginRight: '4px' }}>
-        <i className="fas fa-oil-can" style={{ color: 'var(--accent)', fontSize: '14px' }}></i>
-        <span style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: '13px', color: 'var(--fg)' }}>AutoPOS Professional</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingRight: '14px', borderRight: '1px solid var(--border)', marginRight: '6px' }}>
+        <div className="relative flex items-center justify-center">
+          <i className="fas fa-oil-can" style={{ color: 'var(--accent)', fontSize: '16px' }}></i>
+          <i className="fas fa-gear" style={{ position: 'absolute', fontSize: '6px', color: 'var(--bg)', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}></i>
+        </div>
+        <div className="flex flex-col leading-none">
+          <span style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '13px', color: 'var(--fg)', letterSpacing: '-0.02em' }}>AutoPOS <span style={{ color: 'var(--accent)' }}>v1</span></span>
+          <span style={{ fontSize: '7px', color: 'var(--muted)', textTransform: 'uppercase', tracking: '0.2em', fontWeight: 700 }}>next-gen</span>
+        </div>
       </div>
       
       {/* Archivo */}
