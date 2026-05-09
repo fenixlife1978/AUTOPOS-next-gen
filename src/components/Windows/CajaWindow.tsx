@@ -25,23 +25,20 @@ export default function CajaWindow() {
       tarjeta: 0,
       efectivo_usd: 0,
       zelle: 0,
-      totalVES: 0,
-      totalUSD: 0
+      totalVES: 0, // Suma total de los que pagaron en BS
+      totalUSD: 0  // Suma total de los que pagaron en USD
     };
 
     sessionSales.forEach(v => {
-      // Clasificación de totales
       const vesMethods = ['efectivo_bs', 'pago_movil', 'biopago', 'transferencia', 'tarjeta'];
       const usdMethods = ['efectivo_usd', 'zelle'];
 
-      if (v.metodo in methods) {
-        (methods as any)[v.metodo] += v.total;
-      }
-
       if (vesMethods.includes(v.metodo)) {
-        methods.totalVES += v.total;
+        methods.totalVES += v.totalVES;
+        if (v.metodo in methods) (methods as any)[v.metodo] += v.totalVES;
       } else if (usdMethods.includes(v.metodo)) {
         methods.totalUSD += v.total;
+        if (v.metodo in methods) (methods as any)[v.metodo] += v.total;
       }
     });
 
@@ -90,9 +87,10 @@ export default function CajaWindow() {
                 onChange={e => setMontoApertura(e.target.value)}
                 placeholder="0.00"
                 autoFocus
+                title="Monto inicial en bolívares disponible en caja física"
               />
             </div>
-            <button className="btn btn-primary w-full mt-4 h-12 gap-2" onClick={handleOpen}>
+            <button className="btn btn-primary w-full mt-4 h-12 gap-2" onClick={handleOpen} title="Haga clic para iniciar el turno de trabajo">
               <Unlock size={18} /> ABRIR CAJA AHORA
             </button>
           </div>
@@ -125,14 +123,14 @@ export default function CajaWindow() {
               <p className="text-2xl font-black text-[var(--accent)]">{fmt(stats.totalVES, 'VES')}</p>
             </div>
             <div className="bg-[var(--bg3)] p-4 rounded-xl border border-[var(--border)]">
-              <p className="text-[10px] text-muted uppercase font-bold mb-1">Total Ventas USD</p>
+              <p className="text-[10px] text-muted uppercase font-bold mb-1">Total Ventas USD / Zelle</p>
               <p className="text-2xl font-black text-emerald-400">{fmt(stats.totalUSD, 'USD')}</p>
             </div>
           </div>
 
           <div className="bg-[var(--bg3)] border border-[var(--border)] rounded-xl overflow-hidden">
             <div className="bg-[var(--bg4)] p-2 px-4 border-b border-[var(--border)] flex justify-between items-center">
-              <span className="text-[10px] font-bold uppercase text-muted">Resumen por Método</span>
+              <span className="text-[10px] font-bold uppercase text-muted">Desglose por Método</span>
               <Receipt size={14} className="text-muted" />
             </div>
             <div className="p-4 space-y-2">
@@ -149,10 +147,10 @@ export default function CajaWindow() {
 
           {!isClosed && (
             <div className="flex gap-2 no-print">
-              <button className="btn btn-secondary flex-1 h-11 gap-2" onClick={() => window.print()}>
-                <Printer size={16} /> Imprimir Resumen
+              <button className="btn btn-secondary flex-1 h-11 gap-2" onClick={() => window.print()} title="Imprimir reporte actual del turno">
+                <Printer size={16} /> Imprimir
               </button>
-              <button className="btn btn-primary flex-1 h-11 gap-2 bg-red-600 hover:bg-red-700 text-white border-none" onClick={handleClose}>
+              <button className="btn btn-primary flex-1 h-11 gap-2 bg-red-600 hover:bg-red-700 text-white border-none" onClick={handleClose} title="Cerrar el turno y bloquear ventas adicionales">
                 <Lock size={16} /> CERRAR CAJA
               </button>
             </div>
@@ -160,7 +158,7 @@ export default function CajaWindow() {
           
           {isClosed && (
             <div className="text-center p-4">
-              <p className="text-muted text-xs mb-3 italic">Turno finalizado. Registre la entrada de efectivo y valores según corresponda.</p>
+              <p className="text-muted text-xs mb-3 italic">Turno finalizado. Verifique los montos físicos contra este reporte.</p>
               <button className="btn btn-secondary w-full" onClick={() => window.print()}>
                 <FileText size={16} /> Descargar Reporte de Cierre
               </button>

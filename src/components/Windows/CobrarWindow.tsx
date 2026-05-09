@@ -18,30 +18,34 @@ const PAYMENT_METHODS: { id: Method; label: string; icon: string }[] = [
 ];
 
 export default function CobrarWindow() {
-  const { state, activeWindow, closeWindow, openWindow, processSale } = usePOS();
+  const { state, activeWindow, closeWindow, openWindow, processSale, getTasaActual } = usePOS();
   const [metodo, setMetodo] = useState<Method>('efectivo_bs');
   const [montoRecibido, setMontoRecibido] = useState('');
   const [nota, setNota] = useState('');
   const [processing, setProcessing] = useState(false);
+
+  const tasa = getTasaActual('USD');
 
   const cartItems = state.carrito.map(c => {
     const p = state.productos.find(pr => pr.id === c.prodId);
     return p ? { ...p, cantidad: c.cantidad, subtotal: p.precio * c.cantidad } : null;
   }).filter(Boolean);
 
-  const subtotal = cartItems.reduce((s, i) => s + (i?.subtotal || 0), 0);
-  const iva = subtotal * 0.16;
-  const total = subtotal + iva;
+  const subtotalUSD = cartItems.reduce((s, i) => s + (i?.subtotal || 0), 0);
+  const ivaUSD = subtotalUSD * 0.16;
+  const totalUSD = subtotalUSD + ivaUSD;
+  const totalVES = totalUSD * tasa;
 
   const recibidoNum = parseFloat(montoRecibido) || 0;
-  const cambio = Math.max(0, recibidoNum - total);
+  const montoAComparar = (metodo === 'efectivo_usd' || metodo === 'zelle') ? totalUSD : totalVES;
+  const cambio = Math.max(0, recibidoNum - montoAComparar);
   
   const isCash = metodo === 'efectivo_bs' || metodo === 'efectivo_usd';
-  const canProcess = (!isCash || recibidoNum >= total) && !processing;
+  const canProcess = (!isCash || recibidoNum >= montoAComparar) && !processing;
 
   const numpadInput = (val: string) => {
     if (val === 'del') setMontoRecibido(prev => prev.slice(0, -1));
-    else if (val === 'exact') setMontoRecibido(total.toFixed(2));
+    else if (val === 'exact') setMontoRecibido(montoAComparar.toFixed(2));
     else if (val === '.' && montoRecibido.indexOf('.') === -1) setMontoRecibido(prev => prev + '.');
     else {
       if (montoRecibido.indexOf('.') !== -1 && montoRecibido.split('.')[1].length >= 2) return;
@@ -56,7 +60,7 @@ export default function CobrarWindow() {
     const cliObj = state.clienteActual !== '' ? state.clientes.find(c => c.id === state.clienteActual) : null;
     
     const venta: Sale = {
-      id: '', // Firestore generará el ID
+      id: '',
       fecha: new Date().toISOString(),
       fechaStr: fechaStr(),
       horaStr: horaStr(),
@@ -71,11 +75,13 @@ export default function CobrarWindow() {
         unidad: i!.unidad,
         categoria: i!.categoria
       })),
-      subtotal,
-      iva,
-      total,
+      subtotal: subtotalUSD,
+      iva: ivaUSD,
+      total: totalUSD,
+      totalVES: totalVES,
       metodo,
-      recibido: isCash ? recibidoNum : total,
+      tasaCambio: tasa,
+      recibido: isCash ? recibidoNum : totalUSD,
       cambio: isCash ? cambio : 0,
       nota
     };
@@ -89,7 +95,7 @@ export default function CobrarWindow() {
   return (
     <BaseWindow 
       id="cobrar" 
-      title="Cobrar" 
+      title="Cobrar Venta" 
       icon="fa-cash-register" 
       isOpen={activeWindow === 'cobrar'}
       onClose={closeWindow}
@@ -105,7 +111,8 @@ export default function CobrarWindow() {
     >
       <div style={{ textAlign: 'center', marginBottom: '14px' }}>
         <div style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Total a cobrar</div>
-        <div style={{ fontSize: '36px', fontWeight: 700, fontFamily: 'Space Grotesk', color: 'var(--accent)' }}>{fmt(total)}</div>
+        <div style={{ fontSize: '36px', fontWeight: 700, fontFamily: 'Space Grotesk', color: 'var(--accent)' }}>{fmt(totalUSD, 'USD')}</div>
+        <div style={{ fontSize: '14px', color: 'var(--muted)' }}>≈ {fmt(totalVES, 'VES')} <span style={{ fontSize: '10px' }}>(Tasa: {tasa})</span></div>
       </div>
       
       <div className="form-group">
@@ -117,9 +124,10 @@ export default function CobrarWindow() {
               className={`btn ${metodo === m.id ? 'btn-primary' : 'btn-secondary'}`} 
               onClick={() => {
                 setMetodo(m.id);
-                if (m.id !== 'efectivo_bs' && m.id !== 'efectivo_usd') setMontoRecibido('');
+                setMontoRecibido('');
               }}
               style={{ justifyContent: 'flex-start' }}
+              title={`Seleccionar ${m.label} como forma de pago`}
             >
               <i className={`fas ${m.icon}`} style={{ width: '16px' }}></i> {m.label}
             </button>
@@ -148,15 +156,17 @@ export default function CobrarWindow() {
             <button className="accent" onClick={() => numpadInput('exact')}>Exacto</button>
           </div>
           <div style={{ textAlign: 'center', padding: '10px', background: 'var(--bg)', borderRadius: '8px' }}>
-            <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Cambio</div>
-            <div style={{ fontSize: '24px', fontWeight: 700, fontFamily: 'Space Grotesk', color: cambio > 0 ? 'var(--success)' : 'var(--fg)' }}>{fmt(cambio)}</div>
+            <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Cambio ({metodo === 'efectivo_bs' ? 'Bs.' : '$'})</div>
+            <div style={{ fontSize: '24px', fontWeight: 700, fontFamily: 'Space Grotesk', color: cambio > 0 ? 'var(--success)' : 'var(--fg)' }}>
+              {metodo === 'efectivo_bs' ? fmt(cambio, 'VES') : fmt(cambio, 'USD')}
+            </div>
           </div>
         </div>
       )}
 
       <div className="form-group" style={{ marginTop: '16px' }}>
         <label className="form-label">Nota / Referencia (opcional)</label>
-        <input type="text" className="form-input" value={nota} onChange={(e) => setNota(e.target.value)} placeholder="Ej. Número de confirmación..." />
+        <input type="text" className="form-input" value={nota} onChange={(e) => setNota(e.target.value)} placeholder="Ej. N° de transferencia..." />
       </div>
     </BaseWindow>
   );

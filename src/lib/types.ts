@@ -58,7 +58,7 @@ export interface Product {
   nombre: string;
   categoria: string;
   codigo: string;
-  precio: number;
+  precio: number; // Precio en USD (Referencia principal)
   costo: number;
   porcentajeGanancia: number;
   porcentajeIVA: number;
@@ -90,10 +90,12 @@ export interface Sale {
     unidad: string;
     categoria: string;
   }[];
-  subtotal: number;
-  iva: number;
-  total: number;
+  subtotal: number; // En USD
+  iva: number; // En USD
+  total: number; // En USD
+  totalVES: number; // Total convertido a Bolívares
   metodo: Method;
+  tasaCambio: number;
   recibido: number;
   cambio: number;
   nota?: string;
