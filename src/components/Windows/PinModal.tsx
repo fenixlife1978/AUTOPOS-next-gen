@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { usePOS } from '../POSContext';
 import { Lock, ShieldCheck, X, Delete } from 'lucide-react';
 
@@ -17,24 +17,7 @@ export default function PinModal() {
     }
   }, [isPinModalOpen]);
 
-  if (!isPinModalOpen) return null;
-
-  const handleKeyPress = (num: string) => {
-    if (pin.length < 6) {
-      const newPin = pin + num;
-      setPin(newPin);
-      if (newPin.length === 6) {
-        verify(newPin);
-      }
-    }
-  };
-
-  const handleBackspace = () => {
-    setPin(prev => prev.slice(0, -1));
-    setError(false);
-  };
-
-  const verify = (inputPin: string) => {
+  const verify = useCallback((inputPin: string) => {
     if (inputPin === state.settings.adminPin) {
       setIsPinModalOpen(false);
       if (pendingAdminWindow) {
@@ -47,12 +30,58 @@ export default function PinModal() {
       setPin('');
       toast('PIN incorrecto', 'error');
     }
-  };
+  }, [state.settings.adminPin, pendingAdminWindow, openWindow, setIsPinModalOpen, setPendingAdminWindow, toast]);
 
-  const closeModal = () => {
+  const handleKeyPress = useCallback((num: string) => {
+    setPin(prev => {
+      if (prev.length < 6) {
+        const newPin = prev + num;
+        if (newPin.length === 6) {
+          verify(newPin);
+        }
+        return newPin;
+      }
+      return prev;
+    });
+  }, [verify]);
+
+  const handleBackspace = useCallback(() => {
+    setPin(prev => prev.slice(0, -1));
+    setError(false);
+  }, []);
+
+  const closeModal = useCallback(() => {
     setIsPinModalOpen(false);
     setPendingAdminWindow(null);
-  };
+  }, [setIsPinModalOpen, setPendingAdminWindow]);
+
+  // Soporte para teclado físico
+  useEffect(() => {
+    if (!isPinModalOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Capturar números 0-9
+      if (/^\d$/.test(e.key)) {
+        e.preventDefault();
+        handleKeyPress(e.key);
+      }
+      // Capturar borrar
+      if (e.key === 'Backspace') {
+        e.preventDefault();
+        handleBackspace();
+      }
+      // Capturar cerrar
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeModal();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isPinModalOpen, handleKeyPress, handleBackspace, closeModal]);
+
+  if (!isPinModalOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md">
