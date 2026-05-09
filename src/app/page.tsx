@@ -49,17 +49,17 @@ function MainLayout() {
       }
       if (e.key === 'F6' && !isInput) {
         e.preventDefault();
-        openWindow('inventario');
+        attemptOpenAdminWindow('inventario');
       }
       if (e.key === 'F7' && !isInput) {
         e.preventDefault();
-        openWindow('clientes');
+        attemptOpenAdminWindow('clientes');
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeWindow, closeWindow, clearCart, openWindow, setIsCartMobileOpen]);
+  }, [activeWindow, closeWindow, clearCart, attemptOpenAdminWindow, setIsCartMobileOpen]);
 
   return (
     <>

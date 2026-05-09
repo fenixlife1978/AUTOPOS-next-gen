@@ -21,25 +21,25 @@ export default function Toolbar() {
       
       <div className="tool-sep"></div>
       
-      <div className="tool-btn" onClick={() => openWindow('inventario')} title="F6 - Gestionar productos, servicios y control de stock real">
+      <div className="tool-btn" onClick={() => attemptOpenAdminWindow('inventario')} title="F6 - Gestionar productos, servicios y control de stock real (Requiere PIN)">
         <LayoutDashboard size={16} /> Inventario
       </div>
       
-      <div className="tool-btn" onClick={() => openWindow('clientes')} title="F7 - Directorio de clientes, historial de vehículos y placas">
+      <div className="tool-btn" onClick={() => attemptOpenAdminWindow('clientes')} title="F7 - Directorio de clientes, historial de vehículos y placas (Requiere PIN)">
         <Users size={16} /> Clientes
       </div>
       
-      <div className="tool-btn" onClick={() => openWindow('proveedores')} title="Administrar catálogo de proveedores y facturas de compra">
+      <div className="tool-btn" onClick={() => attemptOpenAdminWindow('proveedores')} title="Administrar catálogo de proveedores y facturas de compra (Requiere PIN)">
         <Truck size={16} /> Proveedores
       </div>
       
       <div className="tool-sep"></div>
       
-      <div className="tool-btn" onClick={() => openWindow('cobranzas')} title="Módulo CxC: Gestión de créditos otorgados a clientes y cobranzas pendientes">
+      <div className="tool-btn" onClick={() => attemptOpenAdminWindow('cobranzas')} title="Módulo CxC: Gestión de créditos otorgados a clientes y cobranzas pendientes (Requiere PIN)">
         <Wallet size={16} /> CxC
       </div>
       
-      <div className="tool-btn" onClick={() => { setAccountFiltroTipo('pagar'); openWindow('cuentas'); }} title="Módulo CxP: Control de deudas con proveedores y pagos realizados">
+      <div className="tool-btn" onClick={() => { setAccountFiltroTipo('pagar'); attemptOpenAdminWindow('cuentas'); }} title="Módulo CxP: Control de deudas con proveedores y pagos realizados (Requiere PIN)">
         <FileText size={16} /> CxP
       </div>
       

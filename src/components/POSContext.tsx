@@ -120,7 +120,16 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
   const closeWindow = useCallback(() => setActiveWindow(null), []);
 
   const attemptOpenAdminWindow = useCallback((name: string) => {
-    const adminWindows = ['contabilidad', 'reportes', 'configuracion'];
+    const adminWindows = [
+      'contabilidad', 
+      'reportes', 
+      'configuracion', 
+      'inventario', 
+      'clientes', 
+      'proveedores', 
+      'cobranzas', 
+      'cuentas'
+    ];
     if (adminWindows.includes(name)) {
       setPendingAdminWindow(name);
       setIsPinModalOpen(true);
