@@ -32,18 +32,22 @@ export default function PinModal() {
     }
   }, [state.settings.adminPin, pendingAdminWindow, openWindow, setIsPinModalOpen, setPendingAdminWindow, toast]);
 
+  // Efecto para disparar la verificación cuando el PIN llega a 6 dígitos
+  // Esto evita el error de actualizar el estado durante el renderizado
+  useEffect(() => {
+    if (pin.length === 6) {
+      verify(pin);
+    }
+  }, [pin, verify]);
+
   const handleKeyPress = useCallback((num: string) => {
     setPin(prev => {
       if (prev.length < 6) {
-        const newPin = prev + num;
-        if (newPin.length === 6) {
-          verify(newPin);
-        }
-        return newPin;
+        return prev + num;
       }
       return prev;
     });
-  }, [verify]);
+  }, []);
 
   const handleBackspace = useCallback(() => {
     setPin(prev => prev.slice(0, -1));
@@ -60,17 +64,14 @@ export default function PinModal() {
     if (!isPinModalOpen) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Capturar números 0-9
       if (/^\d$/.test(e.key)) {
         e.preventDefault();
         handleKeyPress(e.key);
       }
-      // Capturar borrar
       if (e.key === 'Backspace') {
         e.preventDefault();
         handleBackspace();
       }
-      // Capturar cerrar
       if (e.key === 'Escape') {
         e.preventDefault();
         closeModal();
@@ -122,9 +123,7 @@ export default function PinModal() {
               {n}
             </button>
           ))}
-          <div className="flex items-center justify-center">
-            {/* Espacio vacío */}
-          </div>
+          <div className="flex items-center justify-center"></div>
           <button 
             onClick={() => handleKeyPress('0')}
             className="h-14 bg-[var(--bg3)] hover:bg-[var(--bg4)] border border-[var(--border)] rounded-xl text-xl font-bold font-headline flex items-center justify-center active:scale-95"
