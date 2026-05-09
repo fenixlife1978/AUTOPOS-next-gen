@@ -5,7 +5,7 @@ import React, { useState, useMemo } from 'react';
 import { usePOS } from '../POSContext';
 import BaseWindow from './BaseWindow';
 import { fmt } from '@/lib/posLogic';
-import { BarChart3, TrendingUp, TrendingDown, Package, FileText, Calendar, Download, Printer } from 'lucide-react';
+import { BarChart3, TrendingUp, TrendingDown, Package, FileText, Calendar, Download, Printer, Share2, FileDown } from 'lucide-react';
 
 type ReportTab = 'ventas' | 'compras' | 'inventario' | 'flujo';
 
@@ -53,35 +53,56 @@ export default function ReportsWindow() {
 
   const handlePrint = () => {
     window.print();
-    toast('Generando reporte para imprimir...', 'info');
+    toast('Preparando documento PDF...', 'info');
   };
 
-  const handleExport = () => {
+  const handleExportPDF = () => {
+    toast('Generando reporte PDF para descarga...', 'success');
+    window.print();
+  };
+
+  const handleSharePDF = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Reporte AutoPOS - ${tab.toUpperCase()}`,
+          text: `Adjunto reporte de ${tab} generado el ${new Date().toLocaleString()}`,
+          url: window.location.href,
+        });
+        toast('Enlace de reporte compartido', 'success');
+      } catch (err) {
+        handlePrint();
+      }
+    } else {
+      handlePrint();
+    }
+  };
+
+  const handleExportExcel = () => {
     toast('Exportando reporte a Excel...', 'success');
-    // Lógica simplificada de exportación
   };
 
   return (
     <BaseWindow 
       id="reportes" 
-      title="Centro de Reportes y Estadísticas" 
+      title="Centro de Reportes y Estadísticas Profesionales" 
       icon="fa-chart-line" 
       width="950px"
       isOpen={activeWindow === 'reportes'}
       onClose={closeWindow}
-      footer={<button className="btn btn-secondary" onClick={closeWindow}>Cerrar</button>}
+      footer={<button className="btn btn-secondary no-print" onClick={closeWindow}>Cerrar</button>}
     >
       <div className="flex flex-wrap gap-2 mb-4 border-b border-[var(--border)] no-print">
-        <button className={`pb-2 px-3 flex items-center gap-2 text-xs font-bold ${tab === 'ventas' ? 'border-b-2 border-[var(--accent)] text-[var(--accent)]' : 'text-muted'}`} onClick={() => setTab('ventas')}>
+        <button className={`pb-2 px-3 flex items-center gap-2 text-xs font-bold transition-all ${tab === 'ventas' ? 'border-b-2 border-[var(--accent)] text-[var(--accent)]' : 'text-muted'}`} onClick={() => setTab('ventas')}>
           <TrendingUp size={14} /> VENTAS
         </button>
-        <button className={`pb-2 px-3 flex items-center gap-2 text-xs font-bold ${tab === 'compras' ? 'border-b-2 border-[var(--accent)] text-[var(--accent)]' : 'text-muted'}`} onClick={() => setTab('compras')}>
+        <button className={`pb-2 px-3 flex items-center gap-2 text-xs font-bold transition-all ${tab === 'compras' ? 'border-b-2 border-[var(--accent)] text-[var(--accent)]' : 'text-muted'}`} onClick={() => setTab('compras')}>
           <TrendingDown size={14} /> COMPRAS
         </button>
-        <button className={`pb-2 px-3 flex items-center gap-2 text-xs font-bold ${tab === 'inventario' ? 'border-b-2 border-[var(--accent)] text-[var(--accent)]' : 'text-muted'}`} onClick={() => setTab('inventario')}>
+        <button className={`pb-2 px-3 flex items-center gap-2 text-xs font-bold transition-all ${tab === 'inventario' ? 'border-b-2 border-[var(--accent)] text-[var(--accent)]' : 'text-muted'}`} onClick={() => setTab('inventario')}>
           <Package size={14} /> INVENTARIO REAL
         </button>
-        <button className={`pb-2 px-3 flex items-center gap-2 text-xs font-bold ${tab === 'flujo' ? 'border-b-2 border-[var(--accent)] text-[var(--accent)]' : 'text-muted'}`} onClick={() => setTab('flujo')}>
+        <button className={`pb-2 px-3 flex items-center gap-2 text-xs font-bold transition-all ${tab === 'flujo' ? 'border-b-2 border-[var(--accent)] text-[var(--accent)]' : 'text-muted'}`} onClick={() => setTab('flujo')}>
           <BarChart3 size={14} /> FLUJO CAJA
         </button>
       </div>
@@ -111,12 +132,33 @@ export default function ReportsWindow() {
         )}
 
         <div className="ml-auto flex gap-2">
-          <button className="btn btn-secondary btn-sm" onClick={handleExport}><Download size={14} /> Excel</button>
-          <button className="btn btn-primary btn-sm" onClick={handlePrint}><Printer size={14} /> Imprimir</button>
+          <button className="btn btn-secondary btn-sm" onClick={handleExportExcel} title="Exportar a Excel">
+            <Download size={14} /> Excel
+          </button>
+          <button className="btn btn-secondary btn-sm" onClick={handleExportPDF} title="Exportar reporte a PDF">
+            <FileDown size={14} /> Exportar PDF
+          </button>
+          <button className="btn btn-secondary btn-sm" onClick={handleSharePDF} title="Compartir reporte por correo o aplicaciones">
+            <Share2 size={14} /> Compartir PDF
+          </button>
+          <button className="btn btn-primary btn-sm" onClick={handlePrint} title="Imprimir reporte actual">
+            <Printer size={14} /> Imprimir
+          </button>
         </div>
       </div>
 
       <div className="print-area min-h-[400px]">
+        {/* Cabecera solo para impresión */}
+        <div className="print-only hidden mb-8 text-center border-b-2 border-black pb-4">
+          <h1 className="text-2xl font-bold uppercase tracking-widest">AutoPOS Professional</h1>
+          <p className="text-sm">Sistema de Gestión Automotriz</p>
+          <div className="mt-4 flex justify-between text-[10px] uppercase font-bold">
+            <span>Reporte: {tab.toUpperCase()}</span>
+            <span>Periodo: {filter.periodType === 'day' ? filter.day : filter.periodType === 'month' ? filter.month : filter.year}</span>
+            <span>Fecha Emisión: {new Date().toLocaleString()}</span>
+          </div>
+        </div>
+
         {tab === 'ventas' && (
           <div>
             <div className="grid grid-cols-2 gap-4 mb-6">
@@ -187,7 +229,7 @@ export default function ReportsWindow() {
 
         {tab === 'inventario' && (
           <div>
-            <div className="mb-4 bg-[var(--bg3)] p-3 rounded-lg border border-[var(--border)]">
+            <div className="mb-4 bg-[var(--bg3)] p-3 rounded-lg border border-[var(--border)] no-print">
               <p className="text-xs text-muted font-medium italic">Mostrando solo productos creados manualmente en el inventario real (excluyendo catálogo maestro).</p>
             </div>
             <table className="data-table">

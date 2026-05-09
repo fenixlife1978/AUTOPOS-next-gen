@@ -1035,3 +1035,18 @@ h1, h2, h3, h4, h5 {
     max-width: calc(100vw - 8px) !important;
   }
 }
+
+/* Estilos de Impresión Profesionales */
+@media print {
+  .no-print { display: none !important; }
+  .print-area { display: block !important; width: 100% !important; margin: 0 !important; padding: 0 !important; background: white !important; color: black !important; }
+  body { background: white !important; color: black !important; overflow: visible !important; height: auto !important; width: auto !important; }
+  .window-overlay { position: static !important; background: none !important; backdrop-filter: none !important; display: block !important; }
+  .app-window { position: static !important; transform: none !important; width: 100% !important; max-width: none !important; box-shadow: none !important; border: none !important; display: flex !important; }
+  .win-titlebar, .win-footer, .toolbar, .menu-bar, .status-bar, .mobile-tabs, .mobile-cart-toggle, .bg-glow { display: none !important; }
+  .win-body { padding: 0 !important; overflow: visible !important; }
+  .data-table th { background: #f0f0f0 !important; color: black !important; border-bottom: 2px solid black !important; }
+  .data-table td { border-bottom: 1px solid #ddd !important; color: black !important; }
+  .badge { border: 1px solid black !important; background: transparent !important; color: black !important; }
+  .print-only { display: block !important; }
+}
