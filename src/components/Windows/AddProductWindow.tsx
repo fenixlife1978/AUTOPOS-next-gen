@@ -5,8 +5,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { usePOS } from '../POSContext';
 import BaseWindow from './BaseWindow';
 import { calcularPrecio as calcFinal } from '@/lib/posLogic';
-import { getAutomotiveCatalog, CatalogItem } from '@/lib/automotive-catalog';
-import { Search, Plus, Check, Info } from 'lucide-react';
+import { getAutomotiveCatalog, CatalogItem, isCatalogLoading } from '@/lib/automotive-catalog';
+import { Search, Plus, Check, Info, Loader2 } from 'lucide-react';
 
 export default function AddProductWindow() {
   const { state, setState, activeWindow, closeWindow, editingProduct, toast, addCustomCategory } = usePOS();
@@ -30,16 +30,17 @@ export default function AddProductWindow() {
   const [showNewCatModal, setShowNewCatModal] = useState(false);
   const [newCatName, setNewCatName] = useState('');
 
-  // Carga del catálogo masivo en RAM
-  const catalog = useMemo(() => getAutomotiveCatalog(), []);
+  // Obtenemos el catálogo de la RAM
+  const catalog = getAutomotiveCatalog();
+  const loading = isCatalogLoading();
 
   const filteredCatalog = useMemo(() => {
-    if (searchQuery.length < 2) return [];
+    if (searchQuery.length < 2 || catalog.length === 0) return [];
     const q = searchQuery.toLowerCase();
     return catalog.filter(item => 
       item.nombre.toLowerCase().includes(q) ||
       item.marca.toLowerCase().includes(q)
-    ).slice(0, 500); // Mostramos hasta 500 resultados reales por búsqueda
+    ).slice(0, 500); 
   }, [catalog, searchQuery]);
 
   useEffect(() => {
@@ -115,7 +116,6 @@ export default function AddProductWindow() {
     }));
     setShowCatalog(false);
     setSearchQuery('');
-    toast('Producto cargado desde catálogo', 'success');
   };
 
   const handleCalc = () => {
@@ -134,7 +134,7 @@ export default function AddProductWindow() {
       porcentajeGanancia: formData.ganancia,
       porcentajeIVA: formData.iva,
       stock: formData.categoria === 'servicio' ? 999 : formData.stock,
-      icon: { lubricante: 'fa-bottle-droplet', repuesto: 'fa-gear', servicio: 'fa-wrench' }[formData.categoria] || 'fa-box'
+      icon: { motor: 'fa-cog', transmision: 'fa-circle-dot', frenos: 'fa-disc-brake', suspension: 'fa-arrows-up-down', electrico: 'fa-bolt', lubricante: 'fa-bottle-droplet', servicio: 'fa-wrench' }[formData.categoria] || 'fa-box'
     };
 
     setState(prev => {
@@ -173,14 +173,16 @@ export default function AddProductWindow() {
     >
       <div className="mb-4 bg-[var(--bg3)] p-3 rounded-lg border border-[var(--border)]">
         <label className="form-label text-[var(--accent)] font-bold mb-2 flex items-center gap-2">
-          <Search size={14} /> BUSCADOR INTELIGENTE (+10,000 REGISTROS)
+          {loading ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />} 
+          BUSCADOR INTELIGENTE {catalog.length > 0 ? `(+${catalog.length} items)` : '(Cargando...)'}
         </label>
         <div className="relative">
           <input 
             type="text" 
             className="form-input" 
-            placeholder="Buscar en catálogo real (ej: 15W40 PDV, Filtro Bosch, Bujía NGK...)" 
+            placeholder={loading ? "Cargando base de datos en RAM..." : "Buscar en catálogo real (ej: Bujía, Amortiguador, Aceite...)"}
             value={searchQuery}
+            disabled={loading}
             onChange={(e) => {
               setSearchQuery(e.target.value);
               setShowCatalog(true);
@@ -224,8 +226,12 @@ export default function AddProductWindow() {
             onChange={e => handleCategoryChange(e.target.value)}
             title="Seleccione una categoría o cree una nueva"
           >
+            <option value="motor">Motor</option>
+            <option value="transmision">Transmisión</option>
+            <option value="frenos">Frenos</option>
+            <option value="suspension">Suspensión</option>
+            <option value="electrico">Eléctrico</option>
             <option value="lubricante">Lubricante</option>
-            <option value="repuesto">Repuesto</option>
             <option value="servicio">Servicio</option>
             {state.customCategories.map(cat => (
               <option key={cat} value={cat}>{cat}</option>
