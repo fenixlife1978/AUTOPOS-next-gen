@@ -6,7 +6,7 @@ import { usePOS } from './POSContext';
 import { LayoutDashboard, Users, Truck, Wallet, FileText, BarChart3, BookOpen, Plus, Monitor } from 'lucide-react';
 
 export default function Toolbar() {
-  const { openWindow, clearCart, setAccountFiltroTipo, state } = usePOS();
+  const { attemptOpenAdminWindow, openWindow, clearCart, setAccountFiltroTipo, state } = usePOS();
 
   return (
     <div className="toolbar">
@@ -43,11 +43,11 @@ export default function Toolbar() {
         <FileText size={16} /> CxP
       </div>
       
-      <div className="tool-btn" onClick={() => openWindow('contabilidad')} title="Módulo de Contabilidad: Libro Diario, Mayor, Balances y Conciliación Bancaria">
+      <div className="tool-btn" onClick={() => attemptOpenAdminWindow('contabilidad')} title="Módulo de Contabilidad: Libro Diario, Mayor, Balances y Conciliación Bancaria (Requiere PIN)">
         <BookOpen size={16} /> Contabilidad
       </div>
       
-      <div className="tool-btn" onClick={() => openWindow('reportes')} title="Visualizar estadísticas de ventas, ganancias e informes administrativos">
+      <div className="tool-btn" onClick={() => attemptOpenAdminWindow('reportes')} title="Visualizar estadísticas de ventas, ganancias e informes administrativos (Requiere PIN)">
         <BarChart3 size={16} /> Reportes
       </div>
       

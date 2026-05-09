@@ -10,6 +10,7 @@ import CartPanel from '@/components/CartPanel';
 import StatusBar from '@/components/StatusBar';
 import ToastContainer from '@/components/ToastContainer';
 import WindowOverlay from '@/components/Windows/WindowOverlay';
+import PinModal from '@/components/Windows/PinModal';
 
 // Windows
 import InventoryWindow from '@/components/Windows/InventoryWindow';
@@ -31,7 +32,7 @@ import ReportsWindow from '@/components/Windows/ReportsWindow';
 import SettingsWindow from '@/components/Windows/SettingsWindow';
 
 function MainLayout() {
-  const { clearCart, openWindow, closeWindow, activeWindow, setIsCartMobileOpen, mobileTab, setMobileTab, state } = usePOS();
+  const { clearCart, openWindow, attemptOpenAdminWindow, closeWindow, activeWindow, setIsCartMobileOpen, mobileTab, setMobileTab, state } = usePOS();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -86,6 +87,7 @@ function MainLayout() {
       <StatusBar />
       <ToastContainer />
       <WindowOverlay />
+      <PinModal />
       
       <InventoryWindow />
       <AddProductWindow />

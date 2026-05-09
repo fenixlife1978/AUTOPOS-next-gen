@@ -22,7 +22,8 @@ export const DEFAULT_SETTINGS: BusinessSettings = {
   rif: 'J-00000000-0',
   direccion: 'Calle Principal, Local #1, Ciudad',
   telefono: '0212-000-0000',
-  email: 'contacto@negocio.com'
+  email: 'contacto@negocio.com',
+  adminPin: '123456'
 };
 
 export const DEFAULT_STATE: AppState = {

@@ -68,6 +68,12 @@ interface POSContextType {
   setIsCartMobileOpen: (o: boolean) => void;
   mobileTab: string;
   setMobileTab: (t: string) => void;
+
+  attemptOpenAdminWindow: (name: string) => void;
+  isPinModalOpen: boolean;
+  setIsPinModalOpen: (o: boolean) => void;
+  pendingAdminWindow: string | null;
+  setPendingAdminWindow: (w: string | null) => void;
 }
 
 const POSContext = createContext<POSContextType | undefined>(undefined);
@@ -91,6 +97,9 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
   const [isCartMobileOpen, setIsCartMobileOpen] = useState(false);
   const [mobileTab, setMobileTab] = useState('productos');
 
+  const [isPinModalOpen, setIsPinModalOpen] = useState(false);
+  const [pendingAdminWindow, setPendingAdminWindow] = useState<string | null>(null);
+
   useEffect(() => {
     const savedState = loadState();
     setState(savedState);
@@ -109,6 +118,16 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
 
   const openWindow = useCallback((name: string) => setActiveWindow(name), []);
   const closeWindow = useCallback(() => setActiveWindow(null), []);
+
+  const attemptOpenAdminWindow = useCallback((name: string) => {
+    const adminWindows = ['contabilidad', 'reportes', 'configuracion'];
+    if (adminWindows.includes(name)) {
+      setPendingAdminWindow(name);
+      setIsPinModalOpen(true);
+    } else {
+      openWindow(name);
+    }
+  }, [openWindow]);
 
   const toast = useCallback((msg: string, type: 'success' | 'error' | 'info' = 'info') => {
     const id = Math.random().toString(36).substring(2, 9);
@@ -455,7 +474,8 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
       currentSaleForTicket, setCurrentSaleForTicket,
       accountFiltroTipo, setAccountFiltroTipo,
       isCartMobileOpen, setIsCartMobileOpen,
-      mobileTab, setMobileTab
+      mobileTab, setMobileTab,
+      attemptOpenAdminWindow, isPinModalOpen, setIsPinModalOpen, pendingAdminWindow, setPendingAdminWindow
     }}>
       {children}
     </POSContext.Provider>

@@ -28,6 +28,7 @@ export interface BusinessSettings {
   direccion: string;
   telefono: string;
   email: string;
+  adminPin: string;
 }
 
 export interface BoxSession {

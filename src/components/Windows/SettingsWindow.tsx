@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { usePOS } from '../POSContext';
 import BaseWindow from './BaseWindow';
-import { Settings, Save, Store, CreditCard, MapPin, Phone, Mail } from 'lucide-react';
+import { Settings, Save, Store, CreditCard, MapPin, Phone, Mail, Lock } from 'lucide-react';
 
 export default function SettingsWindow() {
   const { state, updateBusinessSettings, activeWindow, closeWindow } = usePOS();
@@ -14,7 +14,8 @@ export default function SettingsWindow() {
     rif: '',
     direccion: '',
     telefono: '',
-    email: ''
+    email: '',
+    adminPin: ''
   });
 
   useEffect(() => {
@@ -99,6 +100,21 @@ export default function SettingsWindow() {
               placeholder="info@negocio.com"
             />
           </div>
+        </div>
+
+        <p className="text-[10px] text-muted font-bold uppercase tracking-widest border-b border-[var(--border)] pb-1 mt-6 mb-4">Seguridad de Acceso</p>
+        
+        <div className="form-group">
+          <label className="form-label flex items-center gap-2"><Lock size={12} /> PIN Administrativo (6 dígitos)</label>
+          <input 
+            type="password" 
+            maxLength={6}
+            className="form-input font-mono tracking-widest text-center text-lg" 
+            value={formData.adminPin} 
+            onChange={e => setFormData({...formData, adminPin: e.target.value.replace(/\D/g, '')})} 
+            placeholder="******"
+          />
+          <p className="text-[10px] text-muted mt-1 italic">Clave requerida para Reportes, Contabilidad y esta Configuración.</p>
         </div>
 
         <div className="bg-[var(--bg3)] p-3 rounded-lg border border-dashed border-[var(--border)] mt-6">
