@@ -4,7 +4,6 @@
 import './globals.css';
 import { useEffect, useState } from 'react';
 import { initializeFirebase } from '@/firebase';
-import { initCatalog } from '@/lib/automotive-catalog';
 
 export default function RootLayout({
   children,
@@ -18,13 +17,9 @@ export default function RootLayout({
       if (typeof window === 'undefined') return;
       
       try {
-        // Inicializamos Firebase primero para que el resto del sistema funcione
+        // Inicializamos Firebase para que el sistema esté listo
         initializeFirebase();
-        
-        // Iniciamos la carga del catálogo en segundo plano sin bloquear la UI
-        // Esto permite que el usuario entre al POS de inmediato
-        initCatalog().catch(err => console.error('Error cargando catálogo:', err));
-        
+        // El catálogo ahora se inicializa dentro del POSProvider en segundo plano
         setInitialized(true);
       } catch (e) {
         console.error('Error en inicialización:', e);

@@ -2,6 +2,7 @@
 /**
  * @fileOverview Catálogo Maestro Automotriz (+18,000 items).
  * Persistencia optimizada: Firebase RTDB -> IndexedDB -> RAM.
+ * Soporte para seguimiento de progreso de carga.
  */
 
 import { initializeFirebase } from '@/firebase';
@@ -20,8 +21,11 @@ const RTDB_PATH = 'catalog_v4';
 
 let RAM_CATALOG: CatalogItem[] | null = null;
 let IS_LOADING = false;
+let CURRENT_PROGRESS = 0;
 
-// --- GENERADOR MASIVO EFICIENTE ---
+// Tipado para el callback de progreso
+export type ProgressCallback = (percent: number) => void;
+
 const VEHICULOS = ['Toyota Corolla', 'Toyota Hilux', 'Ford Fiesta', 'Ford Explorer', 'Chevrolet Aveo', 'Chevrolet Optra', 'Chevrolet Spark', 'Fiat Uno', 'Hyundai Elantra', 'Honda Civic', 'Jeep Grand Cherokee', 'Mitsubishi Lancer'];
 const MARCAS = ['Bosch', 'Denso', 'NGK', 'AC Delco', 'Fram', 'Wix', 'Mann Filter', 'Mopar', 'Motorcraft', 'PDV', 'Shell', 'Motul', 'Castrol', 'Mobil', 'Valvoline', 'Inca', 'Venoco', 'Sky', 'TotalEnergies'];
 
@@ -36,11 +40,13 @@ const PARTES = {
   'servicio': ['Cambio de Aceite', 'Limpieza de Inyectores', 'Revisión de Frenos', 'Lavado y Engrase', 'Escaneo Computarizado', 'Mecánica Ligera']
 };
 
-function generateSeedData(): CatalogItem[] {
+function generateSeedData(onProgress?: ProgressCallback): CatalogItem[] {
   const catalog: CatalogItem[] = [];
   const marcasLubricantes = ['PDV', 'Shell', 'Motul', 'Castrol', 'Mobil', 'Valvoline', 'Inca', 'Venoco', 'Sky', 'TotalEnergies'];
   
-  VEHICULOS.forEach(vehiculo => {
+  const totalSteps = VEHICULOS.length;
+  
+  VEHICULOS.forEach((vehiculo, vIdx) => {
     Object.entries(PARTES).forEach(([cat, items]) => {
       items.forEach(item => {
         MARCAS.forEach(marca => {
@@ -58,11 +64,15 @@ function generateSeedData(): CatalogItem[] {
         });
       });
     });
+    
+    if (onProgress) {
+      const progress = Math.round(((vIdx + 1) / totalSteps) * 100);
+      onProgress(progress);
+    }
   });
   return catalog;
 }
 
-// --- PERSISTENCIA LOCAL ---
 async function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, 4);
@@ -96,23 +106,28 @@ async function getLocal(): Promise<CatalogItem[] | null> {
   } catch (e) { return null; }
 }
 
-// --- INICIALIZACIÓN ---
-export async function initCatalog(): Promise<CatalogItem[]> {
+export async function initCatalog(onProgress?: ProgressCallback): Promise<CatalogItem[]> {
   if (typeof window === 'undefined') return [];
-  if (RAM_CATALOG && RAM_CATALOG.length > 0) return RAM_CATALOG;
+  if (RAM_CATALOG && RAM_CATALOG.length > 0) {
+    if (onProgress) onProgress(100);
+    return RAM_CATALOG;
+  }
   if (IS_LOADING) return [];
 
   IS_LOADING = true;
 
-  // 1. Cargar desde IndexedDB (Instantáneo después del primer inicio)
+  // 1. Cargar desde IndexedDB
+  if (onProgress) onProgress(5);
   const cached = await getLocal();
   if (cached && cached.length > 0) {
     RAM_CATALOG = cached;
     IS_LOADING = false;
+    if (onProgress) onProgress(100);
     return RAM_CATALOG;
   }
 
-  // 2. Si no hay local, descargar de RTDB
+  // 2. Si no hay local, intentar descargar de RTDB
+  if (onProgress) onProgress(10);
   try {
     const { rtdb } = initializeFirebase();
     const snap = await get(ref(rtdb, RTDB_PATH));
@@ -120,13 +135,20 @@ export async function initCatalog(): Promise<CatalogItem[]> {
       RAM_CATALOG = snap.val();
       await saveLocal(RAM_CATALOG!);
       IS_LOADING = false;
+      if (onProgress) onProgress(100);
       return RAM_CATALOG!;
     }
   } catch (e) {}
 
-  // 3. Fallback: Generar masivamente
-  RAM_CATALOG = generateSeedData();
+  // 3. Fallback: Generar masivamente si es la primera vez absoluta
+  if (onProgress) onProgress(15);
+  RAM_CATALOG = generateSeedData((p) => {
+    const adjustedProgress = 15 + Math.round(p * 0.7); // Escalar de 15% a 85%
+    if (onProgress) onProgress(adjustedProgress);
+  });
+  
   await saveLocal(RAM_CATALOG);
+  if (onProgress) onProgress(95);
   
   try {
     const { rtdb } = initializeFirebase();
@@ -134,6 +156,7 @@ export async function initCatalog(): Promise<CatalogItem[]> {
   } catch (e) {}
 
   IS_LOADING = false;
+  if (onProgress) onProgress(100);
   return RAM_CATALOG;
 }
 
@@ -142,5 +165,9 @@ export function getAutomotiveCatalog(): CatalogItem[] {
 }
 
 export function isCatalogLoading(): boolean {
-  return IS_LOADING && (!RAM_CATALOG || RAM_CATALOG.length === 0);
+  return IS_LOADING;
+}
+
+export function getCatalogProgress(): number {
+  return CURRENT_PROGRESS;
 }

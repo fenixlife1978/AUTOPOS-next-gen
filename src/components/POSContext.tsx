@@ -10,6 +10,7 @@ import { loadState, saveState, DEFAULT_STATE } from '@/lib/storage';
 import { fechaStr, horaStr } from '@/lib/posLogic';
 import { collection, addDoc, deleteDoc, doc, updateDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { initializeFirebase } from '@/firebase';
+import { initCatalog } from '@/lib/automotive-catalog';
 
 interface POSContextType {
   state: AppState;
@@ -20,6 +21,10 @@ interface POSContextType {
   toast: (msg: string, type?: 'success' | 'error' | 'info') => void;
   toasts: { id: string; msg: string; type: string }[];
   
+  // Catalog Loading
+  catalogProgress: number;
+  isCatalogReady: boolean;
+
   // Logic
   addToCart: (prodId: number) => void;
   updateCartQty: (prodId: number, delta: number) => void;
@@ -81,6 +86,9 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
   const [activeWindow, setActiveWindow] = useState<string | null>(null);
   const [toasts, setToasts] = useState<{ id: string; msg: string; type: string }[]>([]);
   
+  const [catalogProgress, setCatalogProgress] = useState(0);
+  const [isCatalogReady, setIsCatalogReady] = useState(false);
+
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
@@ -93,7 +101,15 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
   const [mobileTab, setMobileTab] = useState('productos');
 
   useEffect(() => {
-    setState(loadState());
+    // 1. Cargar inventario real primero (instantáneo de localStorage)
+    const savedState = loadState();
+    setState(savedState);
+
+    // 2. Iniciar carga del catálogo en segundo plano
+    initCatalog((p) => {
+      setCatalogProgress(p);
+      if (p === 100) setIsCatalogReady(true);
+    }).catch(err => console.error('Catalog load error:', err));
   }, []);
 
   useEffect(() => {
@@ -425,6 +441,7 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
       state, setState,
       activeWindow, openWindow, closeWindow,
       toast, toasts,
+      catalogProgress, isCatalogReady,
       addToCart, updateCartQty, removeFromCart, clearCart,
       processSale, deleteSale,
       addAccountingEntry, deleteAccountingEntry, addCuenta, updateCuenta, deleteCuenta, closeMonth, reopenMonth,
