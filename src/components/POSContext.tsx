@@ -40,7 +40,7 @@ interface POSContextType {
   reopenMonth: (yearMonth: string) => Promise<void>;
   
   // Cash Box
-  openBox: (monto: number) => void;
+  openBox: (montoVES: number, montoUSD: number) => void;
   closeBox: () => void;
   
   // Invoices & Abonos
@@ -113,11 +113,12 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
     }, 3000);
   }, []);
 
-  const openBox = (monto: number) => {
+  const openBox = (montoVES: number, montoUSD: number) => {
     const newSession: BoxSession = {
       id: Math.random().toString(36).substring(7),
       fechaApertura: new Date().toISOString(),
-      montoAperturaVES: monto,
+      montoAperturaVES: montoVES,
+      montoAperturaUSD: montoUSD,
       vendedor: 'Administrador',
       estado: 'abierta'
     };
@@ -127,7 +128,6 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
 
   const closeBox = () => {
     setState(prev => ({ ...prev, boxSession: { ...prev.boxSession!, estado: 'cerrada', fechaCierre: new Date().toISOString() } }));
-    // No reseteamos inmediatamente para que el componente CajaWindow pueda mostrar el reporte final antes de que el usuario lo cierre
   };
 
   const addCuenta = (cuentaData: Omit<CuentaContable, 'id' | 'nivel' | 'codigo'>) => {

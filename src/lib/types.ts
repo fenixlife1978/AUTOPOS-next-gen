@@ -27,6 +27,7 @@ export interface BoxSession {
   fechaApertura: string;
   fechaCierre?: string;
   montoAperturaVES: number;
+  montoAperturaUSD: number;
   vendedor: string;
   estado: 'abierta' | 'cerrada';
 }

@@ -5,11 +5,12 @@ import React, { useState, useMemo } from 'react';
 import { usePOS } from '../POSContext';
 import BaseWindow from './BaseWindow';
 import { fmt } from '@/lib/posLogic';
-import { Monitor, Unlock, Lock, Calculator, Printer, Receipt, FileText } from 'lucide-react';
+import { Monitor, Unlock, Lock, Calculator, Printer, Receipt, FileText, Banknote } from 'lucide-react';
 
 export default function CajaWindow() {
   const { state, openBox, closeBox, activeWindow, closeWindow, toast } = usePOS();
-  const [montoApertura, setMontoApertura] = useState('');
+  const [montoAperturaVES, setMontoAperturaVES] = useState('');
+  const [montoAperturaUSD, setMontoAperturaUSD] = useState('');
 
   const sessionSales = useMemo(() => {
     if (!state.boxSession) return [];
@@ -25,8 +26,8 @@ export default function CajaWindow() {
       tarjeta: 0,
       efectivo_usd: 0,
       zelle: 0,
-      totalVES: 0, // Suma total de los que pagaron en BS
-      totalUSD: 0  // Suma total de los que pagaron en USD
+      totalVES: 0,
+      totalUSD: 0
     };
 
     sessionSales.forEach(v => {
@@ -46,8 +47,9 @@ export default function CajaWindow() {
   }, [sessionSales]);
 
   const handleOpen = () => {
-    const monto = parseFloat(montoApertura) || 0;
-    openBox(monto);
+    const ves = parseFloat(montoAperturaVES) || 0;
+    const usd = parseFloat(montoAperturaUSD) || 0;
+    openBox(ves, usd);
   };
 
   const handleClose = () => {
@@ -77,20 +79,31 @@ export default function CajaWindow() {
           <h3 className="text-xl font-bold mb-2">Caja Cerrada</h3>
           <p className="text-xs text-muted mb-6">Inicie un nuevo turno para comenzar a procesar ventas.</p>
           
-          <div className="w-full bg-[var(--bg3)] p-6 rounded-xl border border-[var(--border)] shadow-inner">
+          <div className="w-full bg-[var(--bg3)] p-6 rounded-xl border border-[var(--border)] shadow-inner space-y-4">
             <div className="form-group text-left">
               <label className="form-label">Fondo de Apertura (VES)</label>
               <input 
                 type="number" 
-                className="form-input text-xl font-bold text-center" 
-                value={montoApertura} 
-                onChange={e => setMontoApertura(e.target.value)}
+                className="form-input text-lg font-bold" 
+                value={montoAperturaVES} 
+                onChange={e => setMontoAperturaVES(e.target.value)}
                 placeholder="0.00"
                 autoFocus
-                title="Monto inicial en bolívares disponible en caja física"
+                title="Monto inicial en bolívares para dar vuelto"
               />
             </div>
-            <button className="btn btn-primary w-full mt-4 h-12 gap-2" onClick={handleOpen} title="Haga clic para iniciar el turno de trabajo">
+            <div className="form-group text-left">
+              <label className="form-label">Fondo de Apertura (USD $)</label>
+              <input 
+                type="number" 
+                className="form-input text-lg font-bold" 
+                value={montoAperturaUSD} 
+                onChange={e => setMontoAperturaUSD(e.target.value)}
+                placeholder="0.00"
+                title="Monto inicial en dólares efectivo para dar vuelto"
+              />
+            </div>
+            <button className="btn btn-primary w-full mt-4 h-12 gap-2" onClick={handleOpen}>
               <Unlock size={18} /> ABRIR CAJA AHORA
             </button>
           </div>
@@ -111,46 +124,48 @@ export default function CajaWindow() {
                 </p>
               </div>
             </div>
-            <div className="text-right">
-              <p className="text-[10px] text-muted">Apertura</p>
-              <p className={`font-bold ${isClosed ? 'text-red-500' : 'text-success'}`}>{fmt(state.boxSession.montoAperturaVES, 'VES')}</p>
+            <div className="text-right space-y-1">
+              <p className="text-[10px] text-muted font-bold uppercase">Fondos Apertura</p>
+              <p className={`text-xs font-bold ${isClosed ? 'text-red-500' : 'text-success'}`}>VES: {fmt(state.boxSession.montoAperturaVES, 'VES')}</p>
+              <p className={`text-xs font-bold ${isClosed ? 'text-red-500' : 'text-success'}`}>USD: {fmt(state.boxSession.montoAperturaUSD, 'USD')}</p>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-[var(--bg3)] p-4 rounded-xl border border-[var(--border)]">
-              <p className="text-[10px] text-muted uppercase font-bold mb-1">Total Ventas Bs.</p>
+              <p className="text-[10px] text-muted uppercase font-bold mb-1">Ventas Totales VES</p>
               <p className="text-2xl font-black text-[var(--accent)]">{fmt(stats.totalVES, 'VES')}</p>
+              <p className="text-[10px] text-muted mt-2">+ Apertura: {fmt(state.boxSession.montoAperturaVES, 'VES')}</p>
             </div>
             <div className="bg-[var(--bg3)] p-4 rounded-xl border border-[var(--border)]">
-              <p className="text-[10px] text-muted uppercase font-bold mb-1">Total Ventas USD / Zelle</p>
+              <p className="text-[10px] text-muted uppercase font-bold mb-1">Ventas Totales USD / Zelle</p>
               <p className="text-2xl font-black text-emerald-400">{fmt(stats.totalUSD, 'USD')}</p>
+              <p className="text-[10px] text-muted mt-2">+ Apertura Efec: {fmt(state.boxSession.montoAperturaUSD, 'USD')}</p>
             </div>
           </div>
 
           <div className="bg-[var(--bg3)] border border-[var(--border)] rounded-xl overflow-hidden">
             <div className="bg-[var(--bg4)] p-2 px-4 border-b border-[var(--border)] flex justify-between items-center">
-              <span className="text-[10px] font-bold uppercase text-muted">Desglose por Método</span>
+              <span className="text-[10px] font-bold uppercase text-muted">Desglose Final (Ingresos + Apertura)</span>
               <Receipt size={14} className="text-muted" />
             </div>
             <div className="p-4 space-y-2">
-              <div className="flex justify-between text-xs"><span>Efectivo Bs.</span><span className="font-mono">{fmt(stats.efectivo_bs, 'VES')}</span></div>
+              <div className="flex justify-between text-xs"><span>Efectivo Bs. (con Fondo)</span><span className="font-mono">{fmt(stats.efectivo_bs + state.boxSession.montoAperturaVES, 'VES')}</span></div>
               <div className="flex justify-between text-xs"><span>Pago Móvil</span><span className="font-mono">{fmt(stats.pago_movil, 'VES')}</span></div>
               <div className="flex justify-between text-xs"><span>BioPago</span><span className="font-mono">{fmt(stats.biopago, 'VES')}</span></div>
-              <div className="flex justify-between text-xs"><span>Tarjeta</span><span className="font-mono">{fmt(stats.tarjeta, 'VES')}</span></div>
-              <div className="flex justify-between text-xs"><span>Transferencia</span><span className="font-mono">{fmt(stats.transferencia, 'VES')}</span></div>
+              <div className="flex justify-between text-xs"><span>Tarjeta / Transf.</span><span className="font-mono">{fmt(stats.tarjeta + stats.transferencia, 'VES')}</span></div>
               <div className="h-px bg-[var(--border)] my-1"></div>
-              <div className="flex justify-between text-xs font-bold text-emerald-400"><span>Efectivo USD</span><span className="font-mono">{fmt(stats.efectivo_usd, 'USD')}</span></div>
+              <div className="flex justify-between text-xs font-bold text-emerald-400"><span>Efectivo USD (con Fondo)</span><span className="font-mono">{fmt(stats.efectivo_usd + state.boxSession.montoAperturaUSD, 'USD')}</span></div>
               <div className="flex justify-between text-xs font-bold text-emerald-400"><span>Zelle</span><span className="font-mono">{fmt(stats.zelle, 'USD')}</span></div>
             </div>
           </div>
 
           {!isClosed && (
             <div className="flex gap-2 no-print">
-              <button className="btn btn-secondary flex-1 h-11 gap-2" onClick={() => window.print()} title="Imprimir reporte actual del turno">
-                <Printer size={16} /> Imprimir
+              <button className="btn btn-secondary flex-1 h-11 gap-2" onClick={() => window.print()}>
+                <Printer size={16} /> Imprimir Reporte
               </button>
-              <button className="btn btn-primary flex-1 h-11 gap-2 bg-red-600 hover:bg-red-700 text-white border-none" onClick={handleClose} title="Cerrar el turno y bloquear ventas adicionales">
+              <button className="btn btn-primary flex-1 h-11 gap-2 bg-red-600 hover:bg-red-700 text-white border-none" onClick={handleClose}>
                 <Lock size={16} /> CERRAR CAJA
               </button>
             </div>
