@@ -112,11 +112,11 @@ export default function TicketWindow() {
             <span>TOTAL USD:</span>
             <span>{fmt(currentSaleForTicket.total)}</span>
           </div>
-          <div className="flex justify-between text-xs mt-1">
-            <span>TOTAL VES:</span>
+          <div className="flex justify-between text-xs font-bold mt-1 border-t border-dotted border-black pt-1">
+            <span>TOTAL BOLÍVARES:</span>
             <span>{fmt(currentSaleForTicket.totalVES, 'VES')}</span>
           </div>
-          <div className="text-[9px] text-gray-500 mt-1">Tasa: {fmt(currentSaleForTicket.tasaCambio)}</div>
+          <div className="text-[9px] text-gray-500 mt-1">Tasa BCV Aplicada: {currentSaleForTicket.tasaCambio} VES</div>
         </div>
 
         <div className="border-t border-dashed border-black my-2"></div>

@@ -24,7 +24,8 @@ export default function CobrarWindow() {
   const [nota, setNota] = useState('');
   const [processing, setProcessing] = useState(false);
 
-  const tasa = getTasaActual('USD');
+  // Usar la tasa BCV definida en la apertura de caja si existe, de lo contrario la tasa global
+  const tasa = state.boxSession?.tasaBCV || getTasaActual('USD');
 
   const cartItems = state.carrito.map(c => {
     const p = state.productos.find(pr => pr.id === c.prodId);
@@ -112,7 +113,7 @@ export default function CobrarWindow() {
       <div style={{ textAlign: 'center', marginBottom: '14px' }}>
         <div style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Total a cobrar</div>
         <div style={{ fontSize: '36px', fontWeight: 700, fontFamily: 'Space Grotesk', color: 'var(--accent)' }}>{fmt(totalUSD, 'USD')}</div>
-        <div style={{ fontSize: '14px', color: 'var(--muted)' }}>≈ {fmt(totalVES, 'VES')} <span style={{ fontSize: '10px' }}>(Tasa: {tasa})</span></div>
+        <div style={{ fontSize: '14px', color: 'var(--muted)' }}>≈ {fmt(totalVES, 'VES')} <span style={{ fontSize: '10px' }}>(Tasa BCV: {tasa})</span></div>
       </div>
       
       <div className="form-group">

@@ -8,9 +8,10 @@ import { fmt } from '@/lib/posLogic';
 import { Monitor, Unlock, Lock, Calculator, Printer, Receipt, FileText, Banknote } from 'lucide-react';
 
 export default function CajaWindow() {
-  const { state, openBox, closeBox, activeWindow, closeWindow, toast } = usePOS();
+  const { state, openBox, closeBox, activeWindow, closeWindow, toast, getTasaActual } = usePOS();
   const [montoAperturaVES, setMontoAperturaVES] = useState('');
   const [montoAperturaUSD, setMontoAperturaUSD] = useState('');
+  const [tasaBCV, setTasaBCV] = useState(getTasaActual('USD').toString());
 
   const sessionSales = useMemo(() => {
     if (!state.boxSession) return [];
@@ -49,7 +50,14 @@ export default function CajaWindow() {
   const handleOpen = () => {
     const ves = parseFloat(montoAperturaVES) || 0;
     const usd = parseFloat(montoAperturaUSD) || 0;
-    openBox(ves, usd);
+    const tasa = parseFloat(tasaBCV) || 45;
+    
+    if (tasa <= 0) {
+      toast('La tasa BCV debe ser mayor a 0', 'error');
+      return;
+    }
+    
+    openBox(ves, usd, tasa);
   };
 
   const handleClose = () => {
@@ -81,28 +89,41 @@ export default function CajaWindow() {
           
           <div className="w-full bg-[var(--bg3)] p-6 rounded-xl border border-[var(--border)] shadow-inner space-y-4">
             <div className="form-group text-left">
-              <label className="form-label">Fondo de Apertura (VES)</label>
+              <label className="form-label">Tasa BCV del Día (VES/$)</label>
               <input 
                 type="number" 
-                className="form-input text-lg font-bold" 
-                value={montoAperturaVES} 
-                onChange={e => setMontoAperturaVES(e.target.value)}
+                className="form-input text-lg font-bold text-[var(--accent)]" 
+                value={tasaBCV} 
+                onChange={e => setTasaBCV(e.target.value)}
                 placeholder="0.00"
-                autoFocus
-                title="Monto inicial en bolívares para dar vuelto"
+                title="Tasa oficial del BCV para conversión de Bolívares"
               />
             </div>
-            <div className="form-group text-left">
-              <label className="form-label">Fondo de Apertura (USD $)</label>
-              <input 
-                type="number" 
-                className="form-input text-lg font-bold" 
-                value={montoAperturaUSD} 
-                onChange={e => setMontoAperturaUSD(e.target.value)}
-                placeholder="0.00"
-                title="Monto inicial en dólares efectivo para dar vuelto"
-              />
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="form-group text-left">
+                <label className="form-label">Fondo Apertura (VES)</label>
+                <input 
+                  type="number" 
+                  className="form-input" 
+                  value={montoAperturaVES} 
+                  onChange={e => setMontoAperturaVES(e.target.value)}
+                  placeholder="0.00"
+                  autoFocus
+                />
+              </div>
+              <div className="form-group text-left">
+                <label className="form-label">Fondo Apertura (USD $)</label>
+                <input 
+                  type="number" 
+                  className="form-input" 
+                  value={montoAperturaUSD} 
+                  onChange={e => setMontoAperturaUSD(e.target.value)}
+                  placeholder="0.00"
+                />
+              </div>
             </div>
+
             <button className="btn btn-primary w-full mt-4 h-12 gap-2" onClick={handleOpen}>
               <Unlock size={18} /> ABRIR CAJA AHORA
             </button>
@@ -122,6 +143,7 @@ export default function CajaWindow() {
                 <p className="text-xs font-mono">
                   {isClosed ? `Cerrado: ${new Date(state.boxSession.fechaCierre!).toLocaleString()}` : `Desde: ${new Date(state.boxSession.fechaApertura).toLocaleString()}`}
                 </p>
+                <p className="text-[9px] text-muted font-bold">TASA BCV: {state.boxSession.tasaBCV} VES</p>
               </div>
             </div>
             <div className="text-right space-y-1">

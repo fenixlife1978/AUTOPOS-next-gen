@@ -37,6 +37,7 @@ export interface BoxSession {
   fechaCierre?: string;
   montoAperturaVES: number;
   montoAperturaUSD: number;
+  tasaBCV: number;
   vendedor: string;
   estado: 'abierta' | 'cerrada';
 }

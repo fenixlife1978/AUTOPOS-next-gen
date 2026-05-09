@@ -39,7 +39,7 @@ interface POSContextType {
   closeMonth: (yearMonth: string) => Promise<void>;
   reopenMonth: (yearMonth: string) => Promise<void>;
   
-  openBox: (montoVES: number, montoUSD: number) => void;
+  openBox: (montoVES: number, montoUSD: number, tasaBCV: number) => void;
   closeBox: () => void;
   
   registrarFactura: (data: Partial<PurchaseInvoice>) => void;
@@ -167,12 +167,13 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
     toast('Configuración guardada', 'success');
   };
 
-  const openBox = (montoVES: number, montoUSD: number) => {
+  const openBox = (montoVES: number, montoUSD: number, tasaBCV: number) => {
     const newSession: BoxSession = {
       id: Math.random().toString(36).substring(7),
       fechaApertura: new Date().toISOString(),
       montoAperturaVES: montoVES,
       montoAperturaUSD: montoUSD,
+      tasaBCV: tasaBCV,
       vendedor: 'Administrador',
       estado: 'abierta'
     };
@@ -320,18 +321,6 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
     } catch (e) {
       console.error(e);
       toast('Error procesando venta', 'error');
-    }
-  };
-
-  const deleteSale = async (saleId: string) => {
-    if (!confirm('¿Seguro que desea eliminar esta venta?')) return;
-    try {
-      const { firestore } = initializeFirebase();
-      await deleteDoc(doc(firestore, 'ventas', saleId));
-      setState(prev => ({ ...prev, ventas: prev.ventas.filter(v => v.id !== saleId) }));
-      toast('Venta eliminada', 'info');
-    } catch (e) {
-      console.error(e);
     }
   };
 
