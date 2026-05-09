@@ -6,9 +6,10 @@ import { usePOS } from '../POSContext';
 import BaseWindow from './BaseWindow';
 import { fmt } from '@/lib/posLogic';
 import { optimizedInventorySuggestions } from '@/ai/flows/optimized-inventory-suggestions-flow';
+import { LogOut } from 'lucide-react';
 
 export default function InventoryWindow() {
-  const { state, setState, activeWindow, closeWindow, openWindow, setEditingProduct, toast } = usePOS();
+  const { state, setState, activeWindow, closeWindow, openWindow, setEditingProduct, toast, lockModule } = usePOS();
   const [q, setQ] = useState('');
   const [isAiLoading, setIsAiLoading] = useState(false);
 
@@ -38,7 +39,6 @@ export default function InventoryWindow() {
         sales: state.ventas
       });
       
-      // We'll show a simple prompt with the suggestions for now as per requirements
       let msg = "Sugerencias de Reabastecimiento:\n";
       suggestions.reorderSuggestions.filter(s => s.suggestedReorderQuantity > 0).forEach(s => {
         msg += `- ${s.productName}: Reordenar ${s.suggestedReorderQuantity} (${s.reason})\n`;
@@ -64,7 +64,14 @@ export default function InventoryWindow() {
       width="850px"
       isOpen={activeWindow === 'inventario'}
       onClose={closeWindow}
-      footer={<button className="btn btn-secondary" onClick={closeWindow}>Cerrar</button>}
+      footer={
+        <div className="flex justify-between w-full">
+          <button className="btn btn-danger btn-sm gap-2" onClick={() => lockModule('inventario')}>
+            <LogOut size={14} /> SALIR Y BLOQUEAR
+          </button>
+          <button className="btn btn-secondary" onClick={closeWindow}>Cerrar</button>
+        </div>
+      }
     >
       <div style={{ padding: '10px', display: 'flex', gap: '8px', alignItems: 'center', borderBottom: '1px solid var(--border)' }}>
         <div className="search-wrap" style={{ flex: 1 }}>

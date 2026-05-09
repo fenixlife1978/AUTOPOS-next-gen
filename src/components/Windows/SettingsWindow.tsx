@@ -4,10 +4,10 @@
 import React, { useState, useEffect } from 'react';
 import { usePOS } from '../POSContext';
 import BaseWindow from './BaseWindow';
-import { Settings, Save, Store, CreditCard, MapPin, Phone, Mail, Lock } from 'lucide-react';
+import { Settings, Save, Store, CreditCard, MapPin, Phone, Mail, Lock, LogOut } from 'lucide-react';
 
 export default function SettingsWindow() {
-  const { state, updateBusinessSettings, activeWindow, closeWindow } = usePOS();
+  const { state, updateBusinessSettings, activeWindow, closeWindow, lockModule } = usePOS();
   
   const [formData, setFormData] = useState({
     nombre: '',
@@ -38,10 +38,15 @@ export default function SettingsWindow() {
       isOpen={activeWindow === 'configuracion'}
       onClose={closeWindow}
       footer={
-        <>
-          <button className="btn btn-secondary" onClick={closeWindow}>Cancelar</button>
-          <button className="btn btn-primary" onClick={handleSave}><Save size={16} /> Guardar Cambios</button>
-        </>
+        <div className="flex justify-between w-full">
+          <button className="btn btn-danger btn-sm gap-2" onClick={() => lockModule('configuracion')}>
+            <LogOut size={14} /> SALIR Y BLOQUEAR
+          </button>
+          <div className="flex gap-2">
+            <button className="btn btn-secondary" onClick={closeWindow}>Cancelar</button>
+            <button className="btn btn-primary" onClick={handleSave}><Save size={16} /> Guardar</button>
+          </div>
+        </div>
       }
     >
       <div className="space-y-4">
@@ -115,11 +120,6 @@ export default function SettingsWindow() {
             placeholder="******"
           />
           <p className="text-[10px] text-muted mt-1 italic">Clave requerida para Reportes, Contabilidad y esta Configuración.</p>
-        </div>
-
-        <div className="bg-[var(--bg3)] p-3 rounded-lg border border-dashed border-[var(--border)] mt-6">
-          <p className="text-[10px] text-[var(--accent)] font-bold uppercase mb-1">Nota sobre Identidad:</p>
-          <p className="text-[11px] text-muted">Estos datos se utilizarán exclusivamente para los encabezados de los tickets de venta y reportes legales. La marca de AutoPOS Professional se mantendrá en la interfaz del software.</p>
         </div>
       </div>
     </BaseWindow>

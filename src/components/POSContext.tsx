@@ -70,6 +70,9 @@ interface POSContextType {
   setMobileTab: (t: string) => void;
 
   attemptOpenAdminWindow: (name: string) => void;
+  authorizeModule: (name: string) => void;
+  lockModule: (name: string) => void;
+  isModuleAuthorized: (name: string) => boolean;
   isPinModalOpen: boolean;
   setIsPinModalOpen: (o: boolean) => void;
   pendingAdminWindow: string | null;
@@ -99,6 +102,7 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
 
   const [isPinModalOpen, setIsPinModalOpen] = useState(false);
   const [pendingAdminWindow, setPendingAdminWindow] = useState<string | null>(null);
+  const [authorizedModules, setAuthorizedModules] = useState<string[]>([]);
 
   useEffect(() => {
     const savedState = loadState();
@@ -119,6 +123,18 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
   const openWindow = useCallback((name: string) => setActiveWindow(name), []);
   const closeWindow = useCallback(() => setActiveWindow(null), []);
 
+  const isModuleAuthorized = useCallback((name: string) => authorizedModules.includes(name), [authorizedModules]);
+
+  const authorizeModule = useCallback((name: string) => {
+    setAuthorizedModules(prev => [...prev, name]);
+    openWindow(name);
+  }, [openWindow]);
+
+  const lockModule = useCallback((name: string) => {
+    setAuthorizedModules(prev => prev.filter(m => m !== name));
+    closeWindow();
+  }, [closeWindow]);
+
   const attemptOpenAdminWindow = useCallback((name: string) => {
     const adminWindows = [
       'contabilidad', 
@@ -130,13 +146,13 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
       'cobranzas', 
       'cuentas'
     ];
-    if (adminWindows.includes(name)) {
+    if (adminWindows.includes(name) && !authorizedModules.includes(name)) {
       setPendingAdminWindow(name);
       setIsPinModalOpen(true);
     } else {
       openWindow(name);
     }
-  }, [openWindow]);
+  }, [authorizedModules, openWindow]);
 
   const toast = useCallback((msg: string, type: 'success' | 'error' | 'info' = 'info') => {
     const id = Math.random().toString(36).substring(2, 9);
@@ -484,7 +500,8 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
       accountFiltroTipo, setAccountFiltroTipo,
       isCartMobileOpen, setIsCartMobileOpen,
       mobileTab, setMobileTab,
-      attemptOpenAdminWindow, isPinModalOpen, setIsPinModalOpen, pendingAdminWindow, setPendingAdminWindow
+      attemptOpenAdminWindow, authorizeModule, lockModule, isModuleAuthorized,
+      isPinModalOpen, setIsPinModalOpen, pendingAdminWindow, setPendingAdminWindow
     }}>
       {children}
     </POSContext.Provider>

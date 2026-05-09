@@ -6,9 +6,10 @@ import { usePOS } from '../POSContext';
 import BaseWindow from './BaseWindow';
 import { fmt, getAgingCategory } from '@/lib/posLogic';
 import { Method, Moneda } from '@/lib/types';
+import { LogOut } from 'lucide-react';
 
 export default function AccountsPayableWindow() {
-  const { state, registrarAbono, activeWindow, closeWindow, getTasaActual } = usePOS();
+  const { state, registrarAbono, activeWindow, closeWindow, getTasaActual, lockModule } = usePOS();
   const [abonoModal, setAbonoModal] = useState<{ open: boolean; facturaId: number | null }>({ open: false, facturaId: null });
   const [montoAbono, setMontoAbono] = useState('');
   const [monedaAbono, setMonedaAbono] = useState<Moneda>('VES');
@@ -39,12 +40,19 @@ export default function AccountsPayableWindow() {
   return (
     <BaseWindow 
       id="cuentas" 
-      title="Dashboard de Cuentas por Pagar (CxP)" 
+      title="Cuentas por Pagar (CxP)" 
       icon="fa-hand-holding-dollar" 
       width="850px"
       isOpen={activeWindow === 'cuentas'}
       onClose={closeWindow}
-      footer={<button className="btn btn-secondary" onClick={closeWindow}>Cerrar</button>}
+      footer={
+        <div className="flex justify-between w-full">
+          <button className="btn btn-danger btn-sm gap-2" onClick={() => lockModule('cuentas')}>
+            <LogOut size={14} /> SALIR Y BLOQUEAR
+          </button>
+          <button className="btn btn-secondary" onClick={closeWindow}>Cerrar</button>
+        </div>
+      }
     >
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '20px' }}>
         <div style={{ background: 'linear-gradient(135deg, #ef4444 0%, #991b1b 100%)', padding: '15px', borderRadius: '12px', color: '#fff' }}>
@@ -68,8 +76,8 @@ export default function AccountsPayableWindow() {
 
             return (
               <div key={f.id} style={{ background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: '10px', padding: '15px', marginBottom: '12px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                  <div>
+                <div style={{ display: 'flex', justifyBetween: 'space-between', alignItems: 'start' }}>
+                  <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 700, fontSize: '15px', color: 'var(--accent)' }}>{prov?.nombre}</div>
                     <div style={{ fontSize: '12px', color: 'var(--muted)' }}>Factura: {f.numeroFactura} | Vence: {f.fechaVencimiento ? new Date(f.fechaVencimiento).toLocaleDateString() : 'Inmediato'}</div>
                     <div style={{ marginTop: '4px' }}>

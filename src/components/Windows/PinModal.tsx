@@ -6,7 +6,7 @@ import { usePOS } from '../POSContext';
 import { Lock, ShieldCheck, X, Delete } from 'lucide-react';
 
 export default function PinModal() {
-  const { isPinModalOpen, setIsPinModalOpen, pendingAdminWindow, setPendingAdminWindow, openWindow, state, toast } = usePOS();
+  const { isPinModalOpen, setIsPinModalOpen, pendingAdminWindow, setPendingAdminWindow, authorizeModule, state, toast } = usePOS();
   const [pin, setPin] = useState('');
   const [error, setError] = useState(false);
 
@@ -21,7 +21,7 @@ export default function PinModal() {
     if (inputPin === state.settings.adminPin) {
       setIsPinModalOpen(false);
       if (pendingAdminWindow) {
-        openWindow(pendingAdminWindow);
+        authorizeModule(pendingAdminWindow);
         setPendingAdminWindow(null);
       }
       toast('Acceso concedido', 'success');
@@ -30,10 +30,8 @@ export default function PinModal() {
       setPin('');
       toast('PIN incorrecto', 'error');
     }
-  }, [state.settings.adminPin, pendingAdminWindow, openWindow, setIsPinModalOpen, setPendingAdminWindow, toast]);
+  }, [state.settings.adminPin, pendingAdminWindow, authorizeModule, setIsPinModalOpen, setPendingAdminWindow, toast]);
 
-  // Efecto para disparar la verificación cuando el PIN llega a 6 dígitos
-  // Esto evita el error de actualizar el estado durante el renderizado
   useEffect(() => {
     if (pin.length === 6) {
       verify(pin);
@@ -59,7 +57,6 @@ export default function PinModal() {
     setPendingAdminWindow(null);
   }, [setIsPinModalOpen, setPendingAdminWindow]);
 
-  // Soporte para teclado físico
   useEffect(() => {
     if (!isPinModalOpen) return;
 

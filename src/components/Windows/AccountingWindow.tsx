@@ -8,10 +8,10 @@ import { usePOS } from '../POSContext';
 import BaseWindow from './BaseWindow';
 import { fmt } from '@/lib/posLogic';
 import { AsientoContable, CuentaContable, AccountType, Moneda } from '@/lib/types';
-import { FileText, Plus, Book, PieChart, Landmark, ArrowLeftRight, Download, Share2, RefreshCw, Pen, Trash } from 'lucide-react';
+import { FileText, Plus, Book, PieChart, Landmark, ArrowLeftRight, Download, Share2, RefreshCw, Pen, Trash, LogOut } from 'lucide-react';
 
 export default function AccountingWindow() {
-  const { state, activeWindow, closeWindow, toast, addCuenta, updateCuenta, deleteCuenta, reopenMonth, closeMonth, editingCuenta, setEditingCuenta } = usePOS();
+  const { state, activeWindow, closeWindow, toast, addCuenta, updateCuenta, deleteCuenta, reopenMonth, closeMonth, editingCuenta, setEditingCuenta, lockModule } = usePOS();
   const [tab, setTab] = useState<'diario' | 'mayor' | 'balances' | 'catalogo' | 'conciliacion'>('diario');
   const [asientos, setAsientos] = useState<AsientoContable[]>([]);
   const [loading, setLoading] = useState(false);
@@ -134,7 +134,14 @@ export default function AccountingWindow() {
       width="1000px"
       isOpen={activeWindow === 'contabilidad'}
       onClose={closeWindow}
-      footer={<button className="btn btn-secondary" onClick={closeWindow}>Cerrar</button>}
+      footer={
+        <div className="flex justify-between w-full">
+          <button className="btn btn-danger btn-sm gap-2" onClick={() => lockModule('contabilidad')}>
+            <LogOut size={14} /> SALIR Y BLOQUEAR
+          </button>
+          <button className="btn btn-secondary" onClick={closeWindow}>Cerrar</button>
+        </div>
+      }
     >
       <div className="flex flex-wrap gap-2 mb-4 border-b border-[var(--border)] overflow-x-auto no-print">
         <button className={`pb-2 px-3 flex items-center gap-2 text-xs font-bold transition-all ${tab === 'diario' ? 'border-b-2 border-[var(--accent)] text-[var(--accent)]' : 'text-muted'}`} onClick={() => setTab('diario')} title="Libro Diario: Ver todos los registros cronológicos del mes">

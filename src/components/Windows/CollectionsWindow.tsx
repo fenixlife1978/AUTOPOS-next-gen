@@ -9,9 +9,10 @@ import BaseWindow from './BaseWindow';
 import { fmt } from '@/lib/posLogic';
 import { SalesInvoice, Moneda, Method } from '@/lib/types';
 import { registrarCobro, obtenerUltimaTasa } from '@/lib/firebase/cxc';
+import { LogOut } from 'lucide-react';
 
 export default function CollectionsWindow() {
-  const { state, activeWindow, closeWindow, toast } = usePOS();
+  const { state, activeWindow, closeWindow, toast, lockModule } = usePOS();
   const [loading, setLoading] = useState(false);
   const [facturas, setFacturas] = useState<SalesInvoice[]>([]);
   const [selectedFactura, setSelectedFactura] = useState<SalesInvoice | null>(null);
@@ -85,12 +86,19 @@ export default function CollectionsWindow() {
   return (
     <BaseWindow 
       id="cobranzas" 
-      title="Gestión de Cobranzas" 
+      title="Gestión de Cobranzas (CxC)" 
       icon="fa-hand-holding-dollar" 
       width="900px"
       isOpen={activeWindow === 'cobranzas'}
       onClose={closeWindow}
-      footer={<button className="btn btn-secondary" onClick={closeWindow}>Cerrar</button>}
+      footer={
+        <div className="flex justify-between w-full">
+          <button className="btn btn-danger btn-sm gap-2" onClick={() => lockModule('cobranzas')}>
+            <LogOut size={14} /> SALIR Y BLOQUEAR
+          </button>
+          <button className="btn btn-secondary" onClick={closeWindow}>Cerrar</button>
+        </div>
+      }
     >
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="bg-blue-900/20 p-4 rounded-xl border border-blue-500/30">

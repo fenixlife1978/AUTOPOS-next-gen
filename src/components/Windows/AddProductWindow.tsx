@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { usePOS } from '../POSContext';
 import BaseWindow from './BaseWindow';
 import { calcularPrecio as calcFinal } from '@/lib/posLogic';
@@ -29,8 +29,9 @@ export default function AddProductWindow() {
   const [showCatalog, setShowCatalog] = useState(false);
   const [showNewCatModal, setShowNewCatModal] = useState(false);
   const [newCatName, setNewCatName] = useState('');
+  
+  const catalogRef = useRef<HTMLDivElement>(null);
 
-  // Obtenemos el catálogo de la RAM
   const catalog = getAutomotiveCatalog();
   const loading = isCatalogLoading();
 
@@ -74,6 +75,18 @@ export default function AddProductWindow() {
       });
     }
   }, [editingProduct, activeWindow]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (catalogRef.current && !catalogRef.current.contains(event.target as Node)) {
+        setShowCatalog(false);
+      }
+    };
+    if (showCatalog) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showCatalog]);
 
   const generateSKU = (catName: string) => {
     const prefix = catName.substring(0, 3).toUpperCase();
@@ -171,7 +184,7 @@ export default function AddProductWindow() {
         </>
       }
     >
-      <div className="mb-4 bg-[var(--bg3)] p-3 rounded-lg border border-[var(--border)]">
+      <div className="mb-4 bg-[var(--bg3)] p-3 rounded-lg border border-[var(--border)]" ref={catalogRef}>
         <label className="form-label text-[var(--accent)] font-bold mb-2 flex items-center gap-2">
           {loading ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />} 
           BUSCADOR INTELIGENTE {catalog.length > 0 ? `(+${catalog.length} items)` : '(Cargando...)'}

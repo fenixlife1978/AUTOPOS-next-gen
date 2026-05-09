@@ -5,12 +5,12 @@ import React, { useState, useMemo } from 'react';
 import { usePOS } from '../POSContext';
 import BaseWindow from './BaseWindow';
 import { fmt } from '@/lib/posLogic';
-import { BarChart3, TrendingUp, TrendingDown, Package, FileText, Calendar, Download, Printer, Share2, FileDown } from 'lucide-react';
+import { BarChart3, TrendingUp, TrendingDown, Package, FileText, Calendar, Download, Printer, Share2, FileDown, LogOut } from 'lucide-react';
 
 type ReportTab = 'ventas' | 'compras' | 'inventario' | 'flujo';
 
 export default function ReportsWindow() {
-  const { state, activeWindow, closeWindow, toast } = usePOS();
+  const { state, activeWindow, closeWindow, toast, lockModule } = usePOS();
   const [tab, setTab] = useState<ReportTab>('ventas');
   const [filter, setFilter] = useState({
     day: new Date().toISOString().split('T')[0],
@@ -90,7 +90,14 @@ export default function ReportsWindow() {
       width="950px"
       isOpen={activeWindow === 'reportes'}
       onClose={closeWindow}
-      footer={<button className="btn btn-secondary no-print" onClick={closeWindow}>Cerrar</button>}
+      footer={
+        <div className="flex justify-between w-full">
+          <button className="btn btn-danger btn-sm gap-2" onClick={() => lockModule('reportes')}>
+            <LogOut size={14} /> SALIR Y BLOQUEAR
+          </button>
+          <button className="btn btn-secondary no-print" onClick={closeWindow}>Cerrar</button>
+        </div>
+      }
     >
       <div className="flex flex-wrap gap-2 mb-4 border-b border-[var(--border)] no-print">
         <button className={`pb-2 px-3 flex items-center gap-2 text-xs font-bold transition-all ${tab === 'ventas' ? 'border-b-2 border-[var(--accent)] text-[var(--accent)]' : 'text-muted'}`} onClick={() => setTab('ventas')}>

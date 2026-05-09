@@ -4,9 +4,10 @@
 import React, { useState } from 'react';
 import { usePOS } from '../POSContext';
 import BaseWindow from './BaseWindow';
+import { LogOut } from 'lucide-react';
 
 export default function ClientsWindow() {
-  const { state, setState, activeWindow, closeWindow, openWindow, setEditingClient, toast } = usePOS();
+  const { state, setState, activeWindow, closeWindow, openWindow, setEditingClient, toast, lockModule } = usePOS();
   const [q, setQ] = useState('');
 
   const filtered = state.clientes.filter(c => 
@@ -35,7 +36,14 @@ export default function ClientsWindow() {
       width="700px"
       isOpen={activeWindow === 'clientes'}
       onClose={closeWindow}
-      footer={<button className="btn btn-secondary" onClick={closeWindow}>Cerrar</button>}
+      footer={
+        <div className="flex justify-between w-full">
+          <button className="btn btn-danger btn-sm gap-2" onClick={() => lockModule('clientes')}>
+            <LogOut size={14} /> SALIR Y BLOQUEAR
+          </button>
+          <button className="btn btn-secondary" onClick={closeWindow}>Cerrar</button>
+        </div>
+      }
     >
       <div style={{ padding: '10px', display: 'flex', gap: '8px', alignItems: 'center', borderBottom: '1px solid var(--border)' }}>
         <div className="search-wrap" style={{ flex: 1 }}>
