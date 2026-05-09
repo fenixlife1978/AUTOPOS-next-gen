@@ -2,7 +2,7 @@
 export type Category = 'lubricante' | 'repuesto' | 'servicio' | 'general' | 'todos' | string;
 export type Method = 'efectivo_bs' | 'pago_movil' | 'biopago' | 'transferencia' | 'efectivo_usd' | 'tarjeta' | 'zelle' | 'cheque';
 export type AccountStatus = 'PENDIENTE' | 'PARCIAL' | 'COBRADO' | 'VENCIDO' | 'CASTIGADO';
-export type FacturaTipo = 'FISCAL_SENIAT' | 'NOTA_ENTREGA';
+export type FacturaTipo = 'FISCAL_SENIAT' | 'NOTA_ENTREGA' | 'RECIBO' | 'FACTURA_SIMPLE';
 export type Moneda = 'VES' | 'USD' | 'EUR';
 
 export type AccountType = 

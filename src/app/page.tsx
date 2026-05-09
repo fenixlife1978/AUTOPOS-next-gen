@@ -27,6 +27,7 @@ import AccountsPayableWindow from '@/components/Windows/AccountsPayableWindow';
 import CollectionsWindow from '@/components/Windows/CollectionsWindow';
 import AccountingWindow from '@/components/Windows/AccountingWindow';
 import CajaWindow from '@/components/Windows/CajaWindow';
+import ReportsWindow from '@/components/Windows/ReportsWindow';
 
 function MainLayout() {
   const { clearCart, openWindow, closeWindow, activeWindow, setIsCartMobileOpen, mobileTab, setMobileTab, state } = usePOS();
@@ -100,6 +101,7 @@ function MainLayout() {
       <CollectionsWindow />
       <AccountingWindow />
       <CajaWindow />
+      <ReportsWindow />
     </>
   );
 }

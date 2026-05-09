@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { usePOS } from '../POSContext';
 import BaseWindow from './BaseWindow';
 import Image from 'next/image';
-import { Moneda } from '@/lib/types';
+import { Moneda, FacturaTipo } from '@/lib/types';
 
 export default function AddInvoiceWindow() {
   const { state, registrarFactura, activeWindow, closeWindow, toast, getTasaActual } = usePOS();
@@ -19,7 +19,7 @@ export default function AddInvoiceWindow() {
     monto_original: '',
     tasa_cambio: '',
     tasa_fuente: 'BCV',
-    tipoFactura: 'FISCAL_SENIAT' as any,
+    tipoFactura: 'FISCAL_SENIAT' as FacturaTipo,
     esCredito: false
   });
 
@@ -104,6 +104,16 @@ export default function AddInvoiceWindow() {
           <label className="form-label">Fecha Emisión *</label>
           <input type="date" className="form-input" value={formData.fechaEmision} onChange={e => setFormData({...formData, fechaEmision: e.target.value})} />
         </div>
+      </div>
+
+      <div className="form-group">
+        <label className="form-label">Tipo de Comprobante</label>
+        <select className="form-select" value={formData.tipoFactura} onChange={e => setFormData({...formData, tipoFactura: e.target.value as FacturaTipo})}>
+          <option value="FISCAL_SENIAT">Factura Fiscal (SENIAT)</option>
+          <option value="FACTURA_SIMPLE">Factura Simple</option>
+          <option value="NOTA_ENTREGA">Nota de Entrega</option>
+          <option value="RECIBO">Recibo</option>
+        </select>
       </div>
 
       <div style={{ background: 'var(--bg)', padding: '15px', borderRadius: '10px', marginBottom: '15px', border: '1px solid var(--border)' }}>
