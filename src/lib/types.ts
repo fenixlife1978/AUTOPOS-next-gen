@@ -22,6 +22,14 @@ export type AccountType =
   | 'CUENTAS DE ORDEN' 
   | 'RESERVAS';
 
+export interface BusinessSettings {
+  nombre: string;
+  rif: string;
+  direccion: string;
+  telefono: string;
+  email: string;
+}
+
 export interface BoxSession {
   id: string;
   fechaApertura: string;
@@ -59,7 +67,7 @@ export interface Product {
   nombre: string;
   categoria: string;
   codigo: string;
-  precio: number; // Precio en USD (Referencia principal)
+  precio: number; 
   costo: number;
   porcentajeGanancia: number;
   porcentajeIVA: number;
@@ -77,6 +85,7 @@ export interface CartItem {
 
 export interface Sale {
   id: string;
+  ticketNumber: number;
   fecha: string;
   fechaStr: string;
   horaStr: string;
@@ -91,10 +100,10 @@ export interface Sale {
     unidad: string;
     categoria: string;
   }[];
-  subtotal: number; // En USD
-  iva: number; // En USD
-  total: number; // En USD
-  totalVES: number; // Total convertido a Bolívares
+  subtotal: number; 
+  iva: number; 
+  total: number; 
+  totalVES: number; 
   metodo: Method;
   tasaCambio: number;
   recibido: number;
@@ -157,7 +166,7 @@ export interface CuentaContable {
   saldoInicial: number;
   monedaSaldoInicial: Moneda;
   editable: boolean;
-  mesCerrado?: string; // Formato YYYY-MM
+  mesCerrado?: string; 
 }
 
 export interface AsientoContable {
@@ -178,6 +187,7 @@ export interface AsientoContable {
 }
 
 export interface AppState {
+  settings: BusinessSettings;
   productos: Product[];
   clientes: Client[];
   proveedores: Supplier[];
@@ -196,5 +206,6 @@ export interface AppState {
   nextAsientoId: number;
   nextTasaId: number;
   nextCompraId: number;
+  nextTicketNumber: number;
   boxSession: BoxSession | null;
 }

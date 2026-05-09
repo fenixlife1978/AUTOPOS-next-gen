@@ -1,5 +1,5 @@
 
-import { AppState, Product, Client, Supplier, CuentaContable, TasaCambio } from './types';
+import { AppState, Product, Client, Supplier, BusinessSettings, TasaCambio } from './types';
 
 export const STORAGE_KEY = 'autopos_v6_pro_full';
 
@@ -17,7 +17,16 @@ export const TASAS_INICIALES: TasaCambio[] = [
   { monedaOrigen: 'USD', monedaDestino: 'VES', tasa: 45.50, fecha: new Date(), fuente: 'BCV', created_at: new Date() }
 ];
 
+export const DEFAULT_SETTINGS: BusinessSettings = {
+  nombre: 'Mi Autorepuesto Pro',
+  rif: 'J-00000000-0',
+  direccion: 'Calle Principal, Local #1, Ciudad',
+  telefono: '0212-000-0000',
+  email: 'contacto@negocio.com'
+};
+
 export const DEFAULT_STATE: AppState = {
+  settings: DEFAULT_SETTINGS,
   productos: PRODUCTOS_INICIALES,
   clientes: CLIENTES_INICIALES,
   proveedores: PROVEEDORES_INICIALES,
@@ -36,6 +45,7 @@ export const DEFAULT_STATE: AppState = {
   nextAsientoId: 1,
   nextTasaId: 2,
   nextCompraId: 1,
+  nextTicketNumber: 1,
   boxSession: null
 };
 
@@ -54,12 +64,13 @@ export function loadState(): AppState {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
-      // Garantizar que campos críticos existan
       return { 
         ...DEFAULT_STATE, 
         ...parsed,
+        settings: parsed.settings || DEFAULT_SETTINGS,
         cuentas: parsed.cuentas || [],
-        tasas: parsed.tasas || TASAS_INICIALES
+        tasas: parsed.tasas || TASAS_INICIALES,
+        nextTicketNumber: parsed.nextTicketNumber || 1
       };
     }
   } catch (e) {

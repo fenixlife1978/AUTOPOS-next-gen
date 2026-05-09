@@ -4,10 +4,9 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { 
   AppState, Product, Client, Supplier, Sale, CartItem, Category, Method, 
-  PurchaseInvoice, PurchasePayment, AsientoContable, TasaCambio, Moneda, CuentaContable, BoxSession
+  PurchaseInvoice, PurchasePayment, AsientoContable, TasaCambio, Moneda, CuentaContable, BoxSession, BusinessSettings
 } from '@/lib/types';
 import { loadState, saveState, DEFAULT_STATE } from '@/lib/storage';
-import { fechaStr, horaStr } from '@/lib/posLogic';
 import { collection, addDoc, deleteDoc, doc, updateDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { initializeFirebase } from '@/firebase';
 import { initCatalog } from '@/lib/automotive-catalog';
@@ -21,21 +20,17 @@ interface POSContextType {
   toast: (msg: string, type?: 'success' | 'error' | 'info') => void;
   toasts: { id: string; msg: string; type: string }[];
   
-  // Catalog Loading
   catalogProgress: number;
   isCatalogReady: boolean;
 
-  // Logic
   addToCart: (prodId: number) => void;
   updateCartQty: (prodId: number, delta: number) => void;
   removeFromCart: (prodId: number) => void;
   clearCart: () => void;
   
-  // Sales
-  processSale: (sale: Sale) => Promise<void>;
+  processSale: (sale: Omit<Sale, 'ticketNumber'>) => Promise<void>;
   deleteSale: (saleId: string) => Promise<void>;
   
-  // Accounting
   addAccountingEntry: (entry: Omit<AsientoContable, 'id' | 'created_at'>) => Promise<void>;
   deleteAccountingEntry: (entryId: string) => Promise<void>;
   addCuenta: (cuenta: Omit<CuentaContable, 'id' | 'nivel' | 'codigo'>) => void;
@@ -44,19 +39,16 @@ interface POSContextType {
   closeMonth: (yearMonth: string) => Promise<void>;
   reopenMonth: (yearMonth: string) => Promise<void>;
   
-  // Cash Box
   openBox: (montoVES: number, montoUSD: number) => void;
   closeBox: () => void;
   
-  // Invoices & Abonos
   registrarFactura: (data: Partial<PurchaseInvoice>) => void;
   registrarAbono: (data: { facturaId: number; montoOriginal: number; monedaAbono: Moneda; metodo: Method; tasa?: number }) => void;
   getTasaActual: (moneda: Moneda) => number;
   
-  // Categories
   addCustomCategory: (name: string) => void;
+  updateBusinessSettings: (newSettings: BusinessSettings) => void;
   
-  // Window specific
   editingProduct: Product | null;
   setEditingProduct: (p: Product | null) => void;
   editingClient: Client | null;
@@ -72,7 +64,6 @@ interface POSContextType {
   accountFiltroTipo: 'cobrar' | 'pagar';
   setAccountFiltroTipo: (t: 'cobrar' | 'pagar') => void;
   
-  // Mobile
   isCartMobileOpen: boolean;
   setIsCartMobileOpen: (o: boolean) => void;
   mobileTab: string;
@@ -101,11 +92,9 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
   const [mobileTab, setMobileTab] = useState('productos');
 
   useEffect(() => {
-    // 1. Cargar inventario real primero (instantáneo de localStorage)
     const savedState = loadState();
     setState(savedState);
 
-    // 2. Iniciar carga del catálogo en segundo plano
     initCatalog((p) => {
       setCatalogProgress(p);
       if (p === 100) setIsCatalogReady(true);
@@ -128,6 +117,11 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
       setToasts(prev => prev.filter(t => t.id !== id));
     }, 3000);
   }, []);
+
+  const updateBusinessSettings = (newSettings: BusinessSettings) => {
+    setState(prev => ({ ...prev, settings: newSettings }));
+    toast('Configuración guardada', 'success');
+  };
 
   const openBox = (montoVES: number, montoUSD: number) => {
     const newSession: BoxSession = {
@@ -191,7 +185,7 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
   };
 
   const deleteCuenta = (id: string) => {
-    if (!confirm('¿Desea eliminar esta cuenta? Esta acción no se puede deshacer si tiene asientos vinculados.')) return;
+    if (!confirm('¿Desea eliminar esta cuenta?')) return;
     setState(prev => ({ ...prev, cuentas: prev.cuentas.filter(c => c.id !== id) }));
     toast('Cuenta eliminada', 'info');
   };
@@ -205,7 +199,7 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
   };
 
   const reopenMonth = async (yearMonth: string) => {
-    toast(`Mes ${yearMonth} reabierto para correcciones`, 'info');
+    toast(`Mes ${yearMonth} reabierto`, 'info');
     setState(prev => ({
       ...prev,
       cuentas: prev.cuentas.map(c => c.mesCerrado === yearMonth ? { ...c, mesCerrado: undefined } : c)
@@ -233,39 +227,51 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
       const { firestore } = initializeFirebase();
       await deleteDoc(doc(firestore, 'asientos_contables', entryId));
       setState(prev => ({ ...prev, asientos: prev.asientos.filter(a => a.id !== entryId) }));
-      toast('Asiento eliminado', 'info');
     } catch (e) {
       console.error(e);
-      toast('Error al eliminar asiento', 'error');
     }
   };
 
-  const processSale = async (sale: Sale) => {
+  const processSale = async (saleData: Omit<Sale, 'ticketNumber'>) => {
     try {
       const { firestore } = initializeFirebase();
-      const saleData = {
-        ...sale,
+      
+      const ticketNumber = state.nextTicketNumber;
+      const saleWithId: Sale = {
+        ...saleData,
+        ticketNumber,
         boxSessionId: state.boxSession?.id || null,
-        created_at: serverTimestamp()
       };
-      const saleRef = await addDoc(collection(firestore, 'ventas'), saleData);
-      const saleWithId = { ...sale, id: saleRef.id, boxSessionId: state.boxSession?.id };
+
+      const docRef = await addDoc(collection(firestore, 'ventas'), {
+        ...saleWithId,
+        created_at: serverTimestamp()
+      });
+      
+      const finalSale = { ...saleWithId, id: docRef.id };
 
       await addAccountingEntry({
         fecha: new Date(),
-        descripcion: `Venta POS #${saleWithId.id.substring(0, 5)} - ${sale.cliente?.nombre || 'General'}`,
+        descripcion: `Venta POS #${String(ticketNumber).padStart(7, '0')} - ${saleData.cliente?.nombre || 'General'}`,
         tipo: 'VENTA',
-        referencia: saleWithId.id,
+        referencia: finalSale.id,
         modulo: 'VENTAS',
         lineas: [
-          { cuentaId: '1.1.01.01', nombreCuenta: 'Caja Principal', debe: sale.total, haber: 0, moneda: 'VES' },
-          { cuentaId: '4.1.01.01', nombreCuenta: 'Ingresos por Ventas', debe: 0, haber: sale.total / 1.16, moneda: 'VES' },
-          { cuentaId: '2.1.02.01', nombreCuenta: 'Débito Fiscal IVA', debe: 0, haber: (sale.total / 1.16) * 0.16, moneda: 'VES' }
+          { cuentaId: '1.1.01.01', nombreCuenta: 'Caja Principal', debe: saleData.totalVES, haber: 0, moneda: 'VES' },
+          { cuentaId: '4.1.01.01', nombreCuenta: 'Ingresos por Ventas', debe: 0, haber: saleData.totalVES / 1.16, moneda: 'VES' },
+          { cuentaId: '2.1.02.01', nombreCuenta: 'Débito Fiscal IVA', debe: 0, haber: (saleData.totalVES / 1.16) * 0.16, moneda: 'VES' }
         ]
       });
 
-      setState(prev => ({ ...prev, ventas: [saleWithId, ...prev.ventas], carrito: [], clienteActual: '' }));
-      setCurrentSaleForTicket(saleWithId);
+      setState(prev => ({ 
+        ...prev, 
+        ventas: [finalSale, ...prev.ventas], 
+        carrito: [], 
+        clienteActual: '',
+        nextTicketNumber: prev.nextTicketNumber + 1 
+      }));
+      
+      setCurrentSaleForTicket(finalSale);
       toast('Venta procesada con éxito', 'success');
     } catch (e) {
       console.error(e);
@@ -274,21 +280,14 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
   };
 
   const deleteSale = async (saleId: string) => {
-    if (!confirm('¿Seguro que desea eliminar esta venta? Esto también eliminará el asiento contable asociado.')) return;
+    if (!confirm('¿Seguro que desea eliminar esta venta?')) return;
     try {
       const { firestore } = initializeFirebase();
       await deleteDoc(doc(firestore, 'ventas', saleId));
-      
-      const asientoAsociado = state.asientos.find(a => a.referencia === saleId);
-      if (asientoAsociado) {
-        await deleteAccountingEntry(asientoAsociado.id);
-      }
-
       setState(prev => ({ ...prev, ventas: prev.ventas.filter(v => v.id !== saleId) }));
-      toast('Venta y asiento contable eliminados', 'info');
+      toast('Venta eliminada', 'info');
     } catch (e) {
       console.error(e);
-      toast('Error al eliminar venta', 'error');
     }
   };
 
@@ -447,7 +446,7 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
       addAccountingEntry, deleteAccountingEntry, addCuenta, updateCuenta, deleteCuenta, closeMonth, reopenMonth,
       openBox, closeBox,
       registrarFactura, registrarAbono, getTasaActual,
-      addCustomCategory,
+      addCustomCategory, updateBusinessSettings,
       editingProduct, setEditingProduct,
       editingClient, setEditingClient,
       editingSupplier, setEditingSupplier,
